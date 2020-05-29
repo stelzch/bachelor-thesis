@@ -8,17 +8,12 @@
 %% Dr.-Ing. Erik Burger
 %% burger@kit.edu
 %%
-%% Version 1.3.3, 2018-04-17
+%% See https://sdqweb.ipd.kit.edu/wiki/Dokumentvorlagen
 %%
-%% SVN-Informationen:
-%% ------------------
-%% $LastChangedBy: burger $
-%% $LastChangedRevision: 5524 $
-%% $LastChangedDate: 2018-04-17 16:49:27 +0200 (Di, 17. Apr 2018) $
-%% $HeadURL: https://svnserver.informatik.kit.edu/i43/svn/lehre/Abschlussarbeiten-Vorlage/sdqthesis.cls $
+%% Version 1.3.4, 2020-05-07
 
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesClass{sdqthesis}[2017/08/01 v1.3.2 Student thesis class]
+\ProvidesClass{sdqthesis}[2020-05-07 v1.3.4 Student thesis class]
 % Language options. German is also needed in English thesis for the abstract
 \DeclareOption{ngerman}{\PassOptionsToPackage{\CurrentOption}{babel}}
 \DeclareOption{english}{\PassOptionsToPackage{main=\CurrentOption,ngerman}{babel}}
