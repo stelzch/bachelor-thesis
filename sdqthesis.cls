@@ -10,16 +10,14 @@
 %%
 %% See https://sdqweb.ipd.kit.edu/wiki/Dokumentvorlagen
 %%
-%% Version 1.3.4, 2020-05-07
+%% Version 1.3.5, 2020-06-26
 
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesClass{sdqthesis}[2020-05-07 v1.3.4 Student thesis class]
+\ProvidesClass{sdqthesis}[2020-06-26 v1.3.5 Student thesis class]
 % Language options. German is also needed in English thesis for the abstract
 \DeclareOption{ngerman}{\PassOptionsToPackage{\CurrentOption}{babel}}
 \DeclareOption{english}{\PassOptionsToPackage{main=\CurrentOption,ngerman}{babel}}
-% Oneside and twoside layout
-\DeclareOption{oneside}{\PassOptionsToClass{\CurrentOption,BCOR=10mm}{scrbook}}
-\DeclareOption{twoside}{\PassOptionsToClass{\CurrentOption,BCOR=20mm}{scrbook}}
+\DeclareOption*{\PassOptionsToClass{\CurrentOption}{scrbook}}
 \ProcessOptions\relax
 % Used to detect language families
 \RequirePackage{translations}
@@ -27,25 +25,7 @@
 %% ---------------------------------------------------------------
 %% | Based on KOMAscript by Markus Kohm http://www.komascript.de |
 %% ---------------------------------------------------------------
-\LoadClass[12pt,a4paper,titlepage=true,DIV=15,headsepline]{scrbook}
-
-%% ---------------
-%% | Page Layout |
-%% ---------------
-\RequirePackage[headsepline,draft=false]{scrlayer-scrpage}
-\pagestyle{scrheadings}
-
-% For one-sided layout, put the page marks on the right margin
-\if@twoside%
-\else%
-\chead[]{}
-\ohead{\headmark}
-\cfoot[]{}
-\ofoot[\pagemark]{\pagemark}
-\fi%
-
-\clubpenalty=10000 %prevent orphans
-\widowpenalty=10000 %prevent widows
+\LoadClass{scrbook}
 
 %% --------------
 %% | Typography |
@@ -87,6 +67,30 @@
 
 % nicer spacing for enumerations
 \RequirePackage{enumitem}
+
+%% ---------------
+%% | Page Layout |
+%% ---------------
+\KOMAoptions{
+   fontsize=12pt,
+   paper=a4,
+   titlepage=true,
+   headinclude=true,
+   footinclude=false,
+}
+
+% Margins
+\if@twoside%
+  \typearea[20mm]{15} % twoside
+\else% 
+  \typearea[10mm]{15} % oneside
+\fi%
+\RequirePackage[headsepline,draft=false]{scrlayer-scrpage}
+\pagestyle{scrheadings}
+
+\clubpenalty=10000 %prevent orphans
+\widowpenalty=10000 %prevent widows
+
 
 %% --------------
 %% | Title page |
