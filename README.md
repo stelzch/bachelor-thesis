@@ -44,7 +44,7 @@ durch die Angabe von `oneside` in der `\documentclass`-Anweisung am Anfang von
 Draft-Modus
 -----------
 Der Draft-Modus kann verwendet werden, um eine Entwurfsfassung zu generieren. 
-Das kann durch die Option `draft` in der `\documentclass`-Anweisung am Anfang von `seminar.tex` geschehen, oder durch eine Einstellung innerhalb der LaTeX-Umgebung
+Das kann durch die Option `draft` in der `\documentclass`-Anweisung am Anfang von `thesis.tex` geschehen, oder durch eine Einstellung innerhalb der LaTeX-Umgebung
 (z.B. Overleaf: "Compile Mode: Fast (draft)").
 Die entsprechende Option für das endgültige Dokument lautet `final`.
 Im Draft-Modus werden z.B. todo-Notizen sowie Platzhalter für fehlende Abbildungen angezeigt, im `final`-Modus jedoch ausgeblendet.
@@ -132,7 +132,7 @@ layout in the `\documentclass` command at the beginning of `thesis.tex`.
 Draft mode
 ----------
 The draft mode can be activated with the option `draft`
-in the `\documentclass` command at the beginning of `seminar.tex`,
+in the `\documentclass` command at the beginning of `thesis.tex`,
 or by choosing the appropriate compile mode in the LaTeX IDE
 (e.g., in Overleaf: "Compile Mode: Draft (Fast)")
 In `draft` mode, todo-notes and placeholders for missing graphics are displayed,
