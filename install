@@ -18,9 +18,11 @@ function throw {
 
 function help {
 	echo "options:"
-	echo "  -h, --help              show brief help"
-	echo "  -t, --target <dir>      install into the directory <dir>"
-	echo "  -f, --force             clear the target directory before installing"
+	echo "  -h, --help              Show this brief help."
+	echo "  -t, --target <dir>      Install into the directory <dir>."
+	echo "  -f, --force             Clear the target directory before installing."
+	echo "  -c, --copy              Copy the files instead of linking them. If set, changes to the source"
+	echo "                          files after the installation will not influence the installed files."
 }
 
 while [[ $# -gt 0 ]]; do
@@ -30,6 +32,10 @@ while [[ $# -gt 0 ]]; do
 			echo ""
 			help
 			exit 0
+			;;
+		-c|--copy)
+			shift
+			copy=true
 			;;
 		-t|--to)
 			shift
@@ -67,8 +73,16 @@ if [[ -e "$target" ]]; then
 	fi
 fi
 
+if [[ $copy == true ]]; then
+	echo "Copying files to $target..."
+	install="cp -r"
+else 
+	echo "Linking files to $target..."
+	install="ln -s"
+fi
+
 echo "Installing to $target..."
 mkdir -p "$target" \
-	&& ln -s "$source/sdqthesis.cls" "$source/logos" "$source/title-background.pdf" "$target/" \
+	&& $install "$source/sdqthesis.cls" "$source/logos" "$source/title-background.pdf" "$target/" \
 	&& echo -e "${green}Done.$reset" \
 	|| throw "Failure!"
