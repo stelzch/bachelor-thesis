@@ -60,6 +60,16 @@ LaTeX allgemein
 ---------------
 Siehe https://sdqweb.ipd.kit.edu/wiki/LaTeX
 
+
+Verwendung mit [LyX](https://www.lyx.org/WebDe.Home)
+====================================================
+Diese Klasse hat auch eine Layout-Datei, wodurch sie mit der What-You-See-Is-What-You-Mean-Anwendung [LyX](https://www.lyx.org/WebDe.Home) verwendet werden kann. Hierfür muss erst die Klasse zusammen mit der Layout-Datei installiert werden:
+```
+./install --lyx
+```
+Beispieldateien befinden sich im Ordner `lyx/`.
+
+
 Dateistruktur
 ============
 `thesis.tex`
@@ -96,6 +106,14 @@ Abschnitten.
 `install`
 ---------
 Bash-Skript zur Installation der Klasse unter UNIX.
+
+`sdqthesis.layout`
+------------------
+Layout-Datei, die die Verwendung der Klasse mit [LyX](https://www.lyx.org/WebDe.Home) ermöglicht.
+
+`lyx/`
+------
+Enthält Beispieldateien für [LyX](https://www.lyx.org/WebDe.Home), analog zu `thesis.tex` und `sections/*`.
 
 `README.md`
 -----------
@@ -160,6 +178,16 @@ LaTeX
 -----
 See https://sdqweb.ipd.kit.edu/wiki/LaTeX
 
+
+Verwendung mit [LyX](https://www.lyx.org/WebDe.Home)
+====================================================
+This class also has a layout file, enabling you to use it with the “what you see is what you mean” editor [LyX](https://www.lyx.org). To do so, you have to first install the class and the layout file:
+```
+./install --lyx
+```
+Example files can be found in the `lyx/` directory.
+
+
 File structure
 ==============
 `thesis.tex`
@@ -193,6 +221,14 @@ We recommend splitting your sections into single files.
 `install`
 ---------
 Bash script to install this class on UNIX.
+
+`sdqthesis.layout`
+------------------
+Layout file allowing to use the class in [LyX](https://www.lyx.org).
+
+`lyx/`
+------
+Contains example files for [LyX](https://www.lyx.org), analogous to `thesis.tex` and `sections/*`.
 
 `README.md`
 -----------
