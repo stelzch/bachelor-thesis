@@ -21,6 +21,7 @@ function help {
 	echo "  -h, --help              Show this brief help."
 	echo "  -t, --target <dir>      Install into the directory <dir>."
 	echo "  -f, --force             Clear the target directory before installing."
+	echo "  -l, --lyx               Also install the LyX layout."
 	echo "  -c, --copy              Copy the files instead of linking them. If set, changes to the source"
 	echo "                          files after the installation will not influence the installed files."
 }
@@ -50,6 +51,10 @@ while [[ $# -gt 0 ]]; do
 			shift
 			force=true
 			;;
+		-l|--lyx)
+			shift
+			lyx=true
+			;;
 		*)
 		 	error "Unexpected argument '$1'! Aborting."
 			echo ""
@@ -76,13 +81,42 @@ fi
 if [[ $copy == true ]]; then
 	echo "Copying files to $target..."
 	install="cp -r"
+	ainstalling="Copying"
 else 
-	echo "Linking files to $target..."
 	install="ln -s"
+	installing="Linking"
 fi
 
-echo "Installing to $target..."
+echo "$installing the document class files to $target..."
+
 mkdir -p "$target" \
 	&& $install "$source/sdqthesis.cls" "$source/logos" "$source/title-background.pdf" "$target/" \
-	&& echo -e "${green}Done.$reset" \
 	|| throw "Failure!"
+
+if [[ $lyx == true ]]; then
+	lyxdir="$HOME/.lyx"
+	if [[ ! -d "$lyxdir" ]]; then
+		throw "Cannot install the LyX layout because Lyx is not installed on this system! Aborting."
+	fi
+	lyxtarget="$HOME/.lyx/layouts/sdqthesis.layout"
+
+	if [[ -e "$lyxtarget" ]]; then
+		if [[ $force == true ]]; then
+			echo "Deleting existing $lyxtarget..."
+			rm -f "$lyxtarget" \
+				|| throw "Failure!"
+		else
+			throw "$lyxtarget already exists. Aborting. Use --force to overwrite existing files!"
+		fi
+	fi
+	
+	echo "$installing the LyX layout to $lyxtarget..."
+	$install "$source/sdqthesis.layout" "$lyxtarget" \
+		|| throw "Failure!"
+
+	echo "Updating the LyX configuration..."
+	( cd "$lyxdir" && 2>&1 /usr/share/lyx/configure.py ) > /dev/null \
+		|| throw "Failure!"
+fi
+
+echo -e "${green}Done.$reset"
