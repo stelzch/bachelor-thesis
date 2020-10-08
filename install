@@ -20,7 +20,7 @@ function help {
 	echo "options:"
 	echo "  -h, --help              Show this brief help."
 	echo "  -t, --target <dir>      Install into the directory <dir>."
-	echo "  -f, --force             Clear the target directory before installing."
+	echo "  -f, --force             Clear existing files before installing."
 	echo "  -l, --lyx               Also install the LyX layout."
 	echo "  -c, --copy              Copy the files instead of linking them. If set, changes to the source"
 	echo "                          files after the installation will not influence the installed files."
@@ -100,7 +100,7 @@ if [[ $lyx == true ]]; then
 	fi
 	lyxtarget="$HOME/.lyx/layouts/sdqthesis.layout"
 
-	if [[ -e "$lyxtarget" ]]; then
+	if [[ -h "$lyxtarget" || -e "$lyxtarget" ]]; then
 		if [[ $force == true ]]; then
 			echo "Deleting existing $lyxtarget..."
 			rm -f "$lyxtarget" \
@@ -108,6 +108,8 @@ if [[ $lyx == true ]]; then
 		else
 			throw "$lyxtarget already exists. Aborting. Use --force to overwrite existing files!"
 		fi
+	else 
+		echo "no"
 	fi
 	
 	echo "$installing the LyX layout to $lyxtarget..."
