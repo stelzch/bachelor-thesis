@@ -29,6 +29,13 @@ in einem einheitlichen Format erscheinen.
 Die Klasse basiert auf `scrbook` aus dem Paket KOMA-Script. Somit können alle 
 Optionen dieser Klasse verwendet werden. 
 
+Optional: Globale Installation
+------------------------------
+Die Dokumentenklasse kann im texmf-Baum der/des Nutzer:in installiert werden.
+Dadurch müssen Dokumente, die die Klasse verwenden, nicht mehr in diesem Ordner liegen.
+Hierzu kann das `install`-Skript verwendet werden. Weitere Informationen gibt 
+`./install --help`. Je nach System werden root-Rechte zur Installation benötigt.
+
 Sprache
 -------
 Die Sprache des Dokuments ist standardmäßig auf Englisch eingestellt.
@@ -86,6 +93,10 @@ In diesem Verzeichnis können Sie ihre Inhaltsabschnitte als einzelne
 `.tex`-Dateien anlegen. Wir empfehlen Ihnen das Aufteilen der Dateien nach
 Abschnitten.
 
+`install`
+---------
+Bash-Skript zur Installation der Klasse unter UNIX.
+
 `README.md`
 -----------
 Dieser Text.
@@ -117,6 +128,13 @@ spacing etc., so that the theses appear in a uniform way.
 
 The class is based on `scrbook` from the KOMA-Script package. All options of
 this class can be used here as well.
+
+Optional: Global installation
+-----------------------------
+The document class can be installed into the users’ texmf tree. Afterwards, the class
+can be used by documents that are not in this folder. You can use the `install` script
+to install the class. See `./install --help` for more information. Depending on your 
+system, you may require root privileges to install.
 
 Language
 --------
@@ -171,6 +189,10 @@ This directory contains the SDQ logo in PDF and EPS.
 -----------
 This directory contains your content sections, split in single `.tex` files.
 We recommend splitting your sections into single files.
+
+`install`
+---------
+Bash script to install this class on UNIX.
 
 `README.md`
 -----------
