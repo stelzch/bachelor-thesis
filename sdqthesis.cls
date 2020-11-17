@@ -68,6 +68,16 @@
 % nicer spacing for enumerations
 \RequirePackage{enumitem}
 
+%% -----------
+%% | Spacing |
+%% -----------
+
+% more flexible spacing for paragraphs
+\RedeclareSectionCommands[
+    beforeskip= .7em plus .6em minus .3em
+]{paragraph}
+
+
 %% ---------------
 %% | Page Layout |
 %% ---------------
