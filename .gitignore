@@ -12,3 +12,4 @@ thesis.pdf
 sections/*.pdf
 *.run.xml
 *.toc
+*.synctex.gz
