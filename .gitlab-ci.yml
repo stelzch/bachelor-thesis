@@ -1,0 +1,8 @@
+---
+build:
+  image: texlive/texlive:latest
+  script:
+    - pdflatex thesis.tex
+  artifacts:
+    paths:
+      - thesis.pdf
