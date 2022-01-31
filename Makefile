@@ -1,7 +1,7 @@
 all: thesis.pdf
 
 clean:
-	rm thesis.pdf
+	rm -f thesis.pdf
 
 thesis.pdf: thesis.tex
 	latexmk -pdf thesis.tex

@@ -1,8 +1,30 @@
 \chapter{Introduction}
 \label{ch:Introduction}
 
+
 \section{Motivation}
 \label{sec:Motivation}
+From a theoretical point of view, deterministic models of computation, such as a Turing machine, are perfectly reproducible:
+with a defined transition function and fixed input data, the result of a computation will always be the same.
+Real-world computations, however, are much messier, given the numerous sources for non-deterministic behaviour.
+Especially in parallel computing, where individual processors communicate over a network of some sort, unexpected or
+inconsistent results can arise, much to the frustration of users and programmers.
+
+In recent years, concerns about a scientific reproducibility crisis have been expressed. In a survey \cite{baker_reproducibility_2016}
+conducted by Nature in 2016, $52\%$ of scientists believed there was a significant reproducibility crisis.
+Although some researchers argue that the problem is blown out of proportion \cite{fanelli_opinion_2018}, increasing the tangibility
+of scientific findings can only help to solidify the common base, which is becoming ever more important during a trend of
+increasing specialization.
 
 \section{Preliminaries}
+
+A common problem in massively parallel computations is the reduction of results over the entire cluster.
+For instance, RAxML-NG \cite{kozlov_raxml-ng_2019-1}, a software package that computes phylogenetic trees for given genetic datasets,
+utilizes multiple cores to evaluate maximum likelihoods for different gene sites in parallel.
+Under the assumption that sites evolve independently, the likelihood of the full tree is equal to the sum of all per-site
+log-likelihoods.\\
+This value is then used in the tree search decision process.
+Different log-likelihood values cause the algorithm to discard or improve upon different trees, yielding different results.
+
+
 \label{sec:Preliminaries}

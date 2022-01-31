@@ -1,21 +1,447 @@
-@article{becker2008a,
-  author = {Steffen Becker and Heiko Koziolek and Ralf Reussner},
-  title = {{The Palladio Component Model for Model-driven Performance Prediction}},
-  journal = {Journal of Systems and Software},
-  year = {2009},
-  volume = {82},
-  pages = {3--22},
-  doi = {10.1016/j.jss.2008.03.066},
-  publisher = {Elsevier Science Inc.},
-  url = {http://dx.doi.org/10.1016/j.jss.2008.03.066}
+
+@article{ahrens_algorithms_2020,
+  title = {Algorithms for {{Efficient Reproducible Floating Point Summation}}},
+  author = {Ahrens, Peter and Demmel, James and Nguyen, Hong Diep},
+  date = {2020-09-25},
+  journaltitle = {ACM Transactions on Mathematical Software},
+  shortjournal = {ACM Trans. Math. Softw.},
+  volume = {46},
+  number = {3},
+  pages = {1--49},
+  issn = {0098-3500, 1557-7295},
+  doi = {10.1145/3389360},
+  url = {https://dl.acm.org/doi/10.1145/3389360},
+  urldate = {2021-11-09},
+  abstract = {We define “reproducibility” as getting bitwise identical results from multiple runs of the same program, perhaps with different hardware resources or other changes that should not affect the answer. Many users depend on reproducibility for debugging or correctness. However, dynamic scheduling of parallel computing resources, combined with nonassociative floating point addition, makes reproducibility challenging even for summation, or operations like the BLAS. We describe a “reproducible accumulator” data structure (the “binned number”) and associated algorithms to reproducibly sum binary floating point numbers, independent of summation order. We use a subset of the IEEE Floating Point Standard 754-2008 and bitwise operations on the standard representations in memory. Our approach requires only one read-only pass over the data, and one reduction in parallel, using a 6-word reproducible accumulator (more words can be used for higher accuracy), enabling standard tiling optimization techniques. Summing               n               words with a 6-word reproducible accumulator requires approximately 9               n               floating point operations (arithmetic, comparison, and absolute value) and approximately 3               n               bitwise operations. The final error bound with a 6-word reproducible accumulator and our default settings can be up to 2               29               times smaller than the error bound for conventional (recursive) summation on ill-conditioned double-precision inputs.},
+  langid = {english},
+  file = {/home/christoph/Zotero/storage/LLYPDG2U/Ahrens et al. - 2020 - Algorithms for Efficient Reproducible Floating Poi.pdf}
 }
 
-@article{mittelbach2014,
-  author = {Frank Mittelbach},
-  title = {How to influence the position of float environments like figure and table in \LaTeX?},
-  journal = {TUGboat},
-  year = {2014},
-  volume = {35},
-  pages = {248--254},
-  url = {https://www.latex-project.org/publications/tb111mitt-float.pdf},
+@article{baker_reproducibility_2016,
+  title = {Reproducibility Crisis},
+  author = {Baker, Monya},
+  date = {2016},
+  journaltitle = {Nature},
+  volume = {533},
+  number = {26},
+  pages = {353--66},
+  keywords = {Reproducibility},
+  file = {/home/christoph/Zotero/storage/JKUNTYFE/Baker - 2016 - Reproducibility crisis.pdf}
 }
+
+@inproceedings{balaji_reproducibility_2013,
+  title = {On the Reproducibility of {{MPI}} Reduction Operations},
+  booktitle = {2013 {{IEEE}} 10th {{International Conference}} on {{High Performance Computing}} and {{Communications}} \& 2013 {{IEEE International Conference}} on {{Embedded}} and {{Ubiquitous Computing}}},
+  author = {Balaji, Pavan and Kimpe, Dries},
+  date = {2013},
+  pages = {407--414},
+  publisher = {{IEEE}},
+  file = {/home/christoph/Zotero/storage/N3SB3TD7/Balaji und Kimpe - On the Reproducibility of MPI Reduction Operations.pdf}
+}
+
+@article{collange_numerical_2015,
+  title = {Numerical Reproducibility for the Parallel Reduction on Multi-and Many-Core Architectures},
+  author = {Collange, Sylvain and Defour, David and Graillat, Stef and Iakymchuk, Roman},
+  date = {2015},
+  journaltitle = {Parallel Computing},
+  volume = {49},
+  pages = {83--97},
+  publisher = {{Elsevier}},
+  url = {https://www.sciencedirect.com/science/article/pii/S0167819115001155?via%3Dihub},
+  file = {/home/christoph/Zotero/storage/5AUVHPRH/Collange et al. - 2015 - Numerical reproducibility for the parallel reducti.pdf}
+}
+
+@article{curtsinger_coz_2015,
+  title = {Coz: {{Finding Code}} That {{Counts}} with {{Causal Profiling}}},
+  shorttitle = {Coz},
+  author = {Curtsinger, Charlie and Berger, Emery D.},
+  date = {2015-10-04},
+  journaltitle = {Proceedings of the 25th Symposium on Operating Systems Principles},
+  eprint = {1608.03676},
+  eprinttype = {arxiv},
+  pages = {184--197},
+  doi = {10.1145/2815400.2815409},
+  url = {http://arxiv.org/abs/1608.03676},
+  urldate = {2021-12-20},
+  abstract = {Improving performance is a central concern for software developers. To locate optimization opportunities, developers rely on software profilers. However, these profilers only report where programs spent their time: optimizing that code may have no impact on performance. Past profilers thus both waste developer time and make it difficult for them to uncover significant optimization opportunities.},
+  archiveprefix = {arXiv},
+  langid = {english},
+  keywords = {C.4,Computer Science - Performance,D.4.8},
+  file = {/home/christoph/Zotero/storage/WVMIGH8B/Curtsinger and Berger - 2015 - Coz Finding Code that Counts with Causal Profilin.pdf}
+}
+
+@inproceedings{demmel_fast_2013,
+  title = {Fast Reproducible Floating-Point Summation},
+  booktitle = {2013 {{IEEE}} 21st {{Symposium}} on {{Computer Arithmetic}}},
+  author = {Demmel, James and Nguyen, Hong Diep},
+  date = {2013},
+  pages = {163--172},
+  publisher = {{IEEE}},
+  keywords = {Memory expansion},
+  file = {/home/christoph/Zotero/storage/LA8W2A6P/Demmel und Nguyen - 2013 - Fast reproducible floating-point summation.pdf}
+}
+
+@article{demmel_parallel_2015,
+  title = {Parallel {{Reproducible Summation}}},
+  author = {Demmel, James and Nguyen, Hong Diep},
+  date = {2015-07-01},
+  journaltitle = {IEEE Transactions on Computers},
+  shortjournal = {IEEE Trans. Comput.},
+  volume = {64},
+  number = {7},
+  pages = {2060--2070},
+  issn = {0018-9340},
+  doi = {10.1109/TC.2014.2345391},
+  url = {http://ieeexplore.ieee.org/document/6875899/},
+  urldate = {2021-10-01},
+  keywords = {Memory expansion},
+  file = {/home/christoph/Zotero/storage/YRZTK3RH/Demmel und Nguyen - 2015 - Parallel Reproducible Summation.pdf}
+}
+
+@article{fanelli_opinion_2018,
+  title = {Opinion: {{Is}} Science Really Facing a Reproducibility Crisis, and Do We Need It To?},
+  shorttitle = {Opinion},
+  author = {Fanelli, Daniele},
+  date = {2018-03-13},
+  journaltitle = {Proceedings of the National Academy of Sciences},
+  shortjournal = {PNAS},
+  volume = {115},
+  number = {11},
+  eprint = {29531051},
+  eprinttype = {pmid},
+  pages = {2628--2631},
+  publisher = {{National Academy of Sciences}},
+  issn = {0027-8424, 1091-6490},
+  doi = {10.1073/pnas.1708272114},
+  url = {https://www.pnas.org/content/115/11/2628},
+  urldate = {2022-01-31},
+  abstract = {Efforts to improve the reproducibility and integrity of science are typically justified by a narrative of crisis, according to which most published results are unreliable due to growing problems with research and publication practices. This article provides an overview of recent evidence suggesting that this narrative is mistaken, and argues that a narrative of epochal changes and empowerment of scientists would be more accurate, inspiring, and compelling.},
+  langid = {english},
+  keywords = {bias,crisis,integrity,misconduct,reproducible research},
+  file = {/home/christoph/Zotero/storage/GZED4WIQ/Fanelli - 2018 - Opinion Is science really facing a reproducibilit.pdf;/home/christoph/Zotero/storage/7RLF45HL/2628.html}
+}
+
+@article{hubner_load-balance_nodate,
+  title = {Load-{{Balance}} and {{Fault-Tolerance}} for {{Massively Parallel Phylogenetic Inference}}},
+  author = {Hübner, Klaus Lukas},
+  pages = {115},
+  langid = {english},
+  file = {/home/christoph/Zotero/storage/VWI7Z6W7/Hübner - Load-Balance and Fault-Tolerance for Massively Par.pdf}
+}
+
+@online{hunold_mpi_2015,
+  title = {{{MPI}} Benchmarking Revisited: {{Experimental}} Design and Reproducibility},
+  author = {Hunold, Sascha and Carpen-Amarie, Alexandra},
+  date = {2015},
+  eprint = {1505.07734},
+  eprinttype = {arxiv},
+  abstract = {The Message Passing Interface (MPI) is the prevalent programming model used on today’s supercomputers. Therefore, MPIlibrary developers are looking for the best possible performance (shortest run-time) of individual MPI functions across many differentsupercomputer architectures. Several MPI benchmark suites have been developed to assess the performance of MPI implementations.Unfortunately, the outcome of these benchmarks is often neither reproducible nor statistically sound. To overcome these issues, we showwhich experimental factors have an impact on the run-time of blocking collective MPI operations and how to control them. We address theproblem of process and clock synchronization in MPI benchmarks. Finally, we present a new experimental method that allows us to obtainreproducible and statistically sound MPI measurements},
+  archiveprefix = {arXiv},
+  file = {/home/christoph/Zotero/storage/BSKN84WY/Hunold und Carpen-Amarie - 2015 - MPI benchmarking revisited Experimental design an.pdf}
+}
+
+@incollection{hutchison_parallel_2006,
+  title = {Parallel {{Prefix}} ({{Scan}}) {{Algorithms}} for {{MPI}}},
+  booktitle = {Recent {{Advances}} in {{Parallel Virtual Machine}} and {{Message Passing Interface}}},
+  author = {Sanders, Peter and Träff, Jesper Larsson},
+  editor = {Mohr, Bernd and Träff, Jesper Larsson and Worringen, Joachim and Dongarra, Jack},
+  date = {2006},
+  series = {Lecture {{Notes}} in {{Computer Science}}},
+  volume = {4192},
+  pages = {49--57},
+  publisher = {{Springer Berlin Heidelberg}},
+  location = {{Berlin, Heidelberg}},
+  doi = {10.1007/11846802_15},
+  url = {http://link.springer.com/10.1007/11846802_15},
+  urldate = {2021-12-17},
+  abstract = {We describe and experimentally compare three theoretically well-known algorithms for the parallel prefix (or scan, in MPI terms) operation, and give a presumably novel, doubly-pipelined implementation of the in-order binary tree parallel prefix algorithm. Bidirectional interconnects can benefit from this implementation. We present results from a 32 node AMD Cluster with Myrinet 2000 and a 72-node SX-8 parallel vector system. On both systems, we observe improvements by more than a factor two over the straight-forward binomial-tree algorithm found in many MPI implementations. We also discuss adapting the algorithms to clusters of SMP nodes.},
+  editorb = {Hutchison, David and Kanade, Takeo and Kittler, Josef and Kleinberg, Jon M. and Mattern, Friedemann and Mitchell, John C. and Naor, Moni and Nierstrasz, Oscar and Pandu Rangan, C. and Steffen, Bernhard and Sudan, Madhu and Terzopoulos, Demetri and Tygar, Dough and Vardi, Moshe Y. and Weikum, Gerhard},
+  editorbtype = {redactor},
+  isbn = {978-3-540-39110-4 978-3-540-39112-8},
+  langid = {english},
+  file = {/home/christoph/Zotero/storage/SFA5MFUA/Sanders und Träff - 2006 - Parallel Prefix (Scan) Algorithms for MPI.pdf}
+}
+
+@article{kahan_pracniques_1965,
+  title = {Pracniques: Further Remarks on Reducing Truncation Errors},
+  author = {Kahan, William},
+  date = {1965},
+  journaltitle = {Communications of the ACM},
+  volume = {8},
+  number = {1},
+  pages = {40},
+  keywords = {Kahan summation,Memory expansion},
+  file = {/home/christoph/Zotero/storage/A9EE4GTQ/363707.363723.pdf}
+}
+
+@book{knuth_texbook_1986,
+  title = {The {{TeXbook}}},
+  author = {Knuth, Donald Ervin},
+  date = {1986},
+  series = {Computers \& Typesetting},
+  number = {A},
+  publisher = {{Addison-Wesley}},
+  location = {{Reading, Mass}},
+  isbn = {978-0-201-13447-6 978-0-201-13448-3},
+  langid = {english},
+  pagetotal = {483},
+  keywords = {Computer programs,Computerized typesetting,Mathematics printing,TeX (Computer file)},
+  file = {/home/christoph/Zotero/storage/HWTZA4Q3/Knuth und Knuth - 1986 - The TeXbook.pdf}
+}
+
+@online{konstantin_improving_2020,
+  title = {Improving Performance with {{SIMD}} Intrinsics in Three Use Cases},
+  author = {{Konstantin}},
+  date = {2020-07-08T14:00:00+00:00},
+  url = {https://stackoverflow.blog/2020/07/08/improving-performance-with-simd-intrinsics-in-three-use-cases/},
+  urldate = {2022-01-12},
+  abstract = {Many developers write software that’s performance sensitive. After all, that’s one of the major reasons why we still pick C or C++ language these days. When done right, supplementing C or C++ code with vector intrinsics is exceptionally good for performance.},
+  langid = {american},
+  organization = {{Stack Overflow Blog}},
+  keywords = {SIMD},
+  file = {/home/christoph/Zotero/storage/283NJH8C/improving-performance-with-simd-intrinsics-in-three-use-cases.html}
+}
+
+@article{kording_ten_nodate,
+  title = {Ten Simple Rules for Structuring Papers},
+  author = {Kording, Konrad and Mensh, Brett},
+  pages = {12},
+  abstract = {Good scientific writing is essential to career development and to the progress of science. A well-structured manuscript allows readers and reviewers to get excited about the subject matter, to understand and verify the paper’s contributions, and to integrate them into a broader context. However, many scientists struggle with producing high-quality manuscripts and are typically given little training in paper writing. Focusing on how readers consume information, we present a set of 10 simple rules to help you get across the main idea of your paper. These rules are designed to make your paper more influential and the process of writing more efficient and pleasurable.},
+  langid = {english},
+  file = {/home/christoph/Zotero/storage/3VFV5C5R/Ten simple rules for structuring papers.pdf}
+}
+
+@article{kozlov_raxml-ng_2019-1,
+  title = {{{RAxML-NG}}: A Fast, Scalable and User-Friendly Tool for Maximum Likelihood Phylogenetic Inference},
+  shorttitle = {{{RAxML-NG}}},
+  author = {Kozlov, Alexey M and Darriba, Diego and Flouri, Tomáš and Morel, Benoit and Stamatakis, Alexandros},
+  date = {2019-11-01},
+  journaltitle = {Bioinformatics},
+  shortjournal = {Bioinformatics},
+  volume = {35},
+  number = {21},
+  pages = {4453--4455},
+  issn = {1367-4803},
+  doi = {10.1093/bioinformatics/btz305},
+  url = {https://doi.org/10.1093/bioinformatics/btz305},
+  urldate = {2022-01-31},
+  abstract = {Phylogenies are important for fundamental biological research, but also have numerous applications in biotechnology, agriculture and medicine. Finding the optimal tree under the popular maximum likelihood (ML) criterion is known to be NP-hard. Thus, highly optimized and scalable codes are needed to analyze constantly growing empirical datasets.We present RAxML-NG, a from-scratch re-implementation of the established greedy tree search algorithm of RAxML/ExaML. RAxML-NG offers improved accuracy, flexibility, speed, scalability, and usability compared with RAxML/ExaML. On taxon-rich datasets, RAxML-NG typically finds higher-scoring trees than IQTree, an increasingly popular recent tool for ML-based phylogenetic inference (although IQ-Tree shows better stability). Finally, RAxML-NG introduces several new features, such as the detection of terraces in tree space and the recently introduced transfer bootstrap support metric.The code is available under GNU GPL at https://github.com/amkozlov/raxml-ng. RAxML-NG web service (maintained by Vital-IT) is available at https://raxml-ng.vital-it.ch/.Supplementary data are available at Bioinformatics online.},
+  file = {/home/christoph/Zotero/storage/7SP56GWY/Kozlov et al. - 2019 - RAxML-NG a fast, scalable and user-friendly tool .pdf;/home/christoph/Zotero/storage/PEMVMW3T/5487384.html}
+}
+
+@article{mcdougal_reproducibility_2016,
+  title = {Reproducibility in {{Computational Neuroscience Models}} and {{Simulations}}},
+  author = {McDougal, Robert A. and Bulanova, Anna S. and Lytton, William W.},
+  date = {2016-10},
+  journaltitle = {IEEE Transactions on Biomedical Engineering},
+  volume = {63},
+  number = {10},
+  pages = {2021--2035},
+  issn = {1558-2531},
+  doi = {10.1109/TBME.2016.2539602},
+  abstract = {Objective: Like all scientific research, computational neuroscience research must be reproducible. Big data science, including simulation research, cannot depend exclusively on journal articles as the method to provide the sharing and transparency required for reproducibility. Methods: Ensuring model reproducibility requires the use of multiple standard software practices and tools, including version control, strong commenting and documentation, and code modularity. Results: Building on these standard practices, model-sharing sites and tools have been developed that fit into several categories: 1) standardized neural simulators; 2) shared computational resources; 3) declarative model descriptors, ontologies, and standardized annotations; and 4) model-sharing repositories and sharing standards. Conclusion: A number of complementary innovations have been proposed to enhance sharing, transparency, and reproducibility. The individual user can be encouraged to make use of version control, commenting, documentation, and modularity in development of models. The community can help by requiring model sharing as a condition of publication and funding. Significance: Model management will become increasingly important as multiscale models become larger, more detailed, and correspondingly more difficult to manage by any single investigator or single laboratory. Additional big data management complexity will come as the models become more useful in interpreting experiments, thus increasing the need to ensure clear alignment between modeling data, both parameters and results, and experiment.},
+  eventtitle = {{{IEEE Transactions}} on {{Biomedical Engineering}}},
+  keywords = {Annotation,Biological system modeling,Computational modeling,computational neuroscience,Data models,Mathematical model,model sharing,Neuroscience,Numerical models,reproducibility,simulator,Software},
+  file = {/home/christoph/Zotero/storage/XTQCQZYE/McDougal et al. - 2016 - Reproducibility in Computational Neuroscience Mode.pdf;/home/christoph/Zotero/storage/Q7ZMY8LY/7428867.html}
+}
+
+@article{milkowski_replicability_2018,
+  title = {Replicability or Reproducibility? {{On}} the Replication Crisis in Computational Neuroscience and Sharing Only Relevant Detail},
+  shorttitle = {Replicability or Reproducibility?},
+  author = {Miłkowski, Marcin and Hensel, Witold M. and Hohol, Mateusz},
+  date = {2018-12-01},
+  journaltitle = {Journal of Computational Neuroscience},
+  shortjournal = {J Comput Neurosci},
+  volume = {45},
+  number = {3},
+  pages = {163--172},
+  issn = {1573-6873},
+  doi = {10.1007/s10827-018-0702-z},
+  url = {https://doi.org/10.1007/s10827-018-0702-z},
+  urldate = {2022-01-31},
+  abstract = {Replicability and reproducibility of computational models has been somewhat understudied by “the replication movement.” In this paper, we draw on methodological studies into the replicability of psychological experiments and on the mechanistic account of explanation to analyze the functions of model replications and model reproductions in computational neuroscience. We contend that model replicability, or independent researchers' ability to obtain the same output using original code and data, and model reproducibility, or independent researchers' ability to recreate a model without original code, serve different functions and fail for different reasons. This means that measures designed to improve model replicability may not enhance (and, in some cases, may actually damage) model reproducibility. We claim that although both are undesirable, low model reproducibility poses more of a threat to long-term scientific progress than low model replicability. In our opinion, low model reproducibility stems mostly from authors' omitting to provide crucial information in scientific papers and we stress that sharing all computer code and data is not a solution. Reports of computational studies should remain selective and include all and only relevant bits of code.},
+  langid = {english},
+  file = {/home/christoph/Zotero/storage/MDD4CUKN/Miłkowski et al. - 2018 - Replicability or reproducibility On the replicati.pdf}
+}
+
+@report{noauthor_ieee_nodate,
+  title = {{{IEEE Standard}} for {{Floating-Point Arithmetic}}},
+  institution = {{IEEE}},
+  doi = {10.1109/IEEESTD.2008.4610935},
+  url = {http://ieeexplore.ieee.org/document/4610935/},
+  urldate = {2021-10-01},
+  isbn = {9780738157528},
+  file = {/home/christoph/Zotero/storage/9DRU2QTC/IEEE Standard for Floating-Point Arithmetic.pdf}
+}
+
+@online{noauthor_intel_nodate,
+  title = {{{Intel}}® {{Intrinsics Guide}}},
+  url = {https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html},
+  urldate = {2021-11-16},
+  abstract = {Intel® Intrinsics Guide},
+  langid = {english},
+  organization = {{Intel}},
+  keywords = {SIMD}
+}
+
+@online{noauthor_introduction_nodate,
+  title = {An {{Introduction}} to {{GCC Compiler Intrinsics}} in {{Vector Processing}} | {{Linux Journal}}},
+  url = {https://www.linuxjournal.com/content/introduction-gcc-compiler-intrinsics-vector-processing},
+  urldate = {2021-12-03},
+  keywords = {SIMD},
+  file = {/home/christoph/Zotero/storage/9JZ8FVVW/introduction-gcc-compiler-intrinsics-vector-processing.html}
+}
+
+@online{noauthor_scalability_2018,
+  title = {Scalability: Strong and Weak Scaling},
+  shorttitle = {Scalability},
+  date = {2018-11-09T08:47:45+00:00},
+  url = {https://www.kth.se/blogs/pdc/2018/11/scalability-strong-and-weak-scaling/},
+  urldate = {2021-12-10},
+  abstract = {High performance computing (HPC) clusters are able to solve big problems using a large number of processors. This is also known as parallel computing, where many processors work simultaneously to p…},
+  langid = {british},
+  organization = {{PDC Blog}},
+  file = {/home/christoph/Zotero/storage/PTGRBJUS/scalability-strong-and-weak-scaling.html}
+}
+
+@misc{noauthor_simd_nodate,
+  title = {{{SIMD}} for {{C}}++ {{Developers}}},
+  url = {http://const.me/articles/simd/simd.pdf},
+  urldate = {2021-11-16},
+  keywords = {SIMD},
+  file = {/home/christoph/Zotero/storage/J644N69C/simd.pdf}
+}
+
+@article{patarasuk_bandwidth_2009,
+  title = {Bandwidth Optimal All-Reduce Algorithms for Clusters of Workstations},
+  author = {Patarasuk, Pitch and Yuan, Xin},
+  date = {2009-02-01},
+  journaltitle = {Journal of Parallel and Distributed Computing},
+  shortjournal = {Journal of Parallel and Distributed Computing},
+  volume = {69},
+  number = {2},
+  pages = {117--124},
+  issn = {0743-7315},
+  doi = {10.1016/j.jpdc.2008.09.002},
+  url = {https://www.sciencedirect.com/science/article/pii/S0743731508001767},
+  urldate = {2021-12-17},
+  abstract = {We consider an efficient realization of the all-reduce operation with large data sizes in cluster environments, under the assumption that the reduce operator is associative and commutative. We derive a tight lower bound of the amount of data that must be communicated in order to complete this operation and propose a ring-based algorithm that only requires tree connectivity to achieve bandwidth optimality. Unlike the widely used butterfly-like all-reduce algorithm that incurs network contention in SMP/multi-core clusters, the proposed algorithm can achieve contention-free communication in almost all contemporary clusters, including SMP/multi-core clusters and Ethernet switched clusters with multiple switches. We demonstrate that the proposed algorithm is more efficient than other algorithms on clusters with different nodal architectures and networking technologies when the data size is sufficiently large.},
+  langid = {english},
+  keywords = {All-reduce,Cluster of workstations,Collective communication,Tree topology},
+  file = {/home/christoph/Zotero/storage/62QCML2I/Patarasuk und Yuan - 2009 - Bandwidth optimal all-reduce algorithms for cluste.pdf}
+}
+
+@unpublished{pollard_statistical_2020,
+  title = {A {{Statistical Analysis}} of {{Error}} in {{MPI Reduction Operations}}},
+  author = {Pollard, Samuel D. and Norris, Boyana},
+  date = {2020-11-11},
+  url = {https://sampollard.github.io/research/artifacts/pollard_correctness20_presentation.pdf},
+  file = {/home/christoph/Zotero/storage/N3N6KKA7/pollard_correctness20_presentation.pdf}
+}
+
+@inproceedings{pollard_statistical_2020-1,
+  title = {A {{Statistical Analysis}} of {{Error}} in {{MPI Reduction Operations}}},
+  booktitle = {2020 {{IEEE}}/{{ACM}} 4th {{International Workshop}} on {{Software Correctness}} for {{HPC Applications}} ({{Correctness}})},
+  author = {Pollard, Samuel D. and Norris, Boyana},
+  date = {2020-11},
+  pages = {49--57},
+  publisher = {{IEEE}},
+  location = {{GA, USA}},
+  doi = {10.1109/Correctness51934.2020.00011},
+  url = {https://ieeexplore.ieee.org/document/9296938/},
+  urldate = {2021-09-28},
+  eventtitle = {2020 {{IEEE}}/{{ACM}} 4th {{International Workshop}} on {{Software Correctness}} for {{HPC Applications}} ({{Correctness}})},
+  isbn = {978-0-7381-1044-8}
+}
+
+@article{robey_search_2011,
+  title = {In Search of Numerical Consistency in Parallel Programming},
+  author = {Robey, Robert W. and Robey, Jonathan M. and Aulwes, Rob},
+  date = {2011-04-01},
+  journaltitle = {Parallel Computing},
+  shortjournal = {Parallel Computing},
+  volume = {37},
+  number = {4},
+  pages = {217--229},
+  issn = {0167-8191},
+  doi = {10.1016/j.parco.2011.02.009},
+  url = {https://www.sciencedirect.com/science/article/pii/S0167819111000238},
+  urldate = {2021-10-01},
+  abstract = {We present methods that can dramatically improve numerical consistency for parallel calculations across varying numbers of processors. By calculating global sums with enhanced precision techniques based on Kahan or Knuth summations, the consistency of the numerical results can be greatly improved with minimal memory and computational cost. This study assesses the value of the enhanced numerical consistency in the context of general finite difference or finite volume calculations.},
+  langid = {english},
+  keywords = {Finite difference,Finite volume,Kahan summation,Knuth summation,Memory expansion,Numerical consistency,Parallel programming,Reproducibility},
+  file = {/home/christoph/Zotero/storage/CILUT9ZQ/Robey et al. - 2011 - In search of numerical consistency in parallel pro.pdf}
+}
+
+@article{rump_fast_2010,
+  title = {Fast High Precision Summation},
+  author = {Rump, Siegfried M and Ogita, Takeshi and Oishi, Shin'ichi},
+  date = {2010},
+  journaltitle = {Nonlinear Theory and Its Applications, IEICE},
+  volume = {1},
+  number = {1},
+  pages = {2--24},
+  publisher = {{The Institute of Electronics, Information and Communication Engineers}},
+  keywords = {Memory expansion,Reproducibility,Summation},
+  file = {/home/christoph/Zotero/storage/CH53KA7Q/Rump et al. - 2010 - Fast high precision summation.pdf}
+}
+
+@article{sandve_ten_2013,
+  title = {Ten {{Simple Rules}} for {{Reproducible Computational Research}}},
+  author = {Sandve, Geir Kjetil and Nekrutenko, Anton and Taylor, James and Hovig, Eivind},
+  date = {2013-10-24},
+  journaltitle = {PLOS Computational Biology},
+  shortjournal = {PLOS Computational Biology},
+  volume = {9},
+  number = {10},
+  pages = {e1003285},
+  publisher = {{Public Library of Science}},
+  issn = {1553-7358},
+  doi = {10.1371/journal.pcbi.1003285},
+  url = {https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1003285},
+  urldate = {2022-01-31},
+  langid = {english},
+  keywords = {Archives,Computer and information sciences,Computer applications,Genome analysis,Habits,Replication studies,Reproducibility,Source code},
+  file = {/home/christoph/Zotero/storage/HU7AFFCA/Sandve et al. - 2013 - Ten Simple Rules for Reproducible Computational Re.pdf;/home/christoph/Zotero/storage/FJHBKJCC/article.html}
+}
+
+@article{stamatakis_raxml_2014,
+  title = {{{RAxML}} Version 8: A Tool for Phylogenetic Analysis and Post-Analysis of Large Phylogenies},
+  shorttitle = {{{RAxML}} Version 8},
+  author = {Stamatakis, Alexandros},
+  date = {2014-05-01},
+  journaltitle = {Bioinformatics},
+  shortjournal = {Bioinformatics},
+  volume = {30},
+  number = {9},
+  pages = {1312--1313},
+  issn = {1367-4803},
+  doi = {10.1093/bioinformatics/btu033},
+  url = {https://doi.org/10.1093/bioinformatics/btu033},
+  urldate = {2022-01-28},
+  abstract = {Motivation: Phylogenies are increasingly used in all fields of medical and biological research. Moreover, because of the next-generation sequencing revolution, datasets used for conducting phylogenetic analyses grow at an unprecedented pace. RAxML (Randomized Axelerated Maximum Likelihood) is a popular program for phylogenetic analyses of large datasets under maximum likelihood. Since the last RAxML paper in 2006, it has been continuously maintained and extended to accommodate the increasingly growing input datasets and to serve the needs of the user community.Results: I present some of the most notable new features and extensions of RAxML, such as a substantial extension of substitution models and supported data types, the introduction of SSE3, AVX and AVX2 vector intrinsics, techniques for reducing the memory requirements of the code and a plethora of operations for conducting post-analyses on sets of trees. In addition, an up-to-date 50-page user manual covering all new RAxML options is available.Availability and implementation: The code is available under GNU GPL at https://github.com/stamatak/standard-RAxML.Contact:alexandros.stamatakis@h-its.orgSupplementary information:Supplementary data are available at Bioinformatics online.},
+  file = {/home/christoph/Zotero/storage/K9GWF7PW/Stamatakis - 2014 - RAxML version 8 a tool for phylogenetic analysis .pdf;/home/christoph/Zotero/storage/JJNCXNUR/238053.html}
+}
+
+@video{strange_loop_conference_performance_2019,
+  title = {"{{Performance Matters}}" by {{Emery Berger}}},
+  editor = {{Strange Loop Conference}},
+  date = {2019-09-15},
+  url = {https://www.youtube.com/watch?v=r-TLSBdHe1A},
+  urldate = {2021-12-20},
+  abstract = {Performance clearly matters to users. For example, the most common software update on the AppStore is "Bug fixes and performance enhancements." Now that Moore's Law has ended, programmers have to work hard to get high performance for their applications. But why is performance hard to deliver? I will first explain why current approaches to evaluating and optimizing performance don't work, especially on modern hardware and for modern applications. I then present two systems that address these challenges. Stabilizer is a tool that enables statistically sound performance evaluation, making it possible to understand the impact of optimizations and conclude things like the fact that the -O2 and -O3 optimization levels are indistinguishable from noise (sadly true). Since compiler optimizations have run out of steam, we need better profiling support, especially for modern concurrent, multi-threaded applications. Coz is a new "causal profiler" that lets programmers optimize for throughput or latency, and which pinpoints and accurately predicts the impact of optimizations. Coz's approach unlocks previously unknown optimization opportunities. Guided by Coz, we improved the performance of Memcached (9\%), SQLite (25\%), and accelerated six other applications by as much as 68\%; in most cases, this involved modifying less than 10 lines of code and took under half an hour (without any prior understanding of the programs!). Coz now ships as part of standard Linux distros (apt install coz-profiler). Emery Berger University of Massachusetts Amherst @emeryberger Emery Berger is a Professor in the College of Information and Computer Sciences at the University of Massachusetts Amherst, the flagship campus of the UMass system. He graduated with a Ph.D. in Computer Science from the University of Texas at Austin in 2002. Professor Berger has been a Visiting Scientist at Microsoft Research (where he is currently on sabbatical), the University of Washington, and at the Universitat Politècnica de Catalunya (UPC) / Barcelona Supercomputing Center (BSC). Professor Berger's research spans programming languages, runtime systems, and operating systems, with a particular focus on systems that transparently improve reliability, security, and performance. He and his collaborators have created a number of influential software systems including Hoard, a fast and scalable memory manager that accelerates multithreaded applications (used by companies including British Telecom, Cisco, Crédit Suisse, Reuters, Royal Bank of Canada, SAP, and Tata, and on which the Mac OS X memory manager is based); DieHard, an error-avoiding memory manager that directly influenced the design of the Windows 7 Fault-Tolerant Heap; and DieHarder, a secure memory manager that was an inspiration for hardening changes made to the Windows 8 heap. His honors include a Microsoft Research Fellowship, an NSF CAREER Award, a Lilly Teaching Fellowship, the Distinguished Artifact Award for PLDI 2014, Most Influential Paper Awards at OOPSLA, PLDI, and ASPLOS, three CACM Research Highlights, a Google Research Award, a Microsoft SEIF Award, and Best Paper Awards at FAST, OOPSLA, and SOSP; he was named an ACM Distinguished Member in 2018. Professor Berger is currently serving his second term as an elected member of the SIGPLAN Executive Committee; he served for a decade (2007-2017) as Associate Editor of the ACM Transactions on Programming Languages and Systems, and was Program Chair for PLDI 2016.},
+  editortype = {director},
+  keywords = {benchmarking}
+}
+
+@inproceedings{villa_effects_2009,
+  title = {Effects of Floating-Point Non-Associativity on Numerical Computations on Massively Multithreaded Systems},
+  booktitle = {Proceedings of {{Cray User Group Meeting}} ({{CUG}})},
+  author = {Villa, Oreste and Chavarria-Miranda, Daniel and Gurumoorthi, Vidhya and Marquéz, Andrés and Krishnamoorthy, Sriram},
+  date = {2009},
+  volume = {3},
+  url = {http://www.sci.utah.edu/~beiwang/teaching/cs6210-fall-2016/nonassociativity.pdf},
+  file = {/home/christoph/Zotero/storage/X8XW9UA9/nonassociativity.pdf}
+}
+
+
