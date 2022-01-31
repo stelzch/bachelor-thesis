@@ -2,7 +2,7 @@
 build:
   image: texlive/texlive:latest
   script:
-    - pdflatex thesis.tex
+    - make all
   artifacts:
     paths:
       - thesis.pdf
