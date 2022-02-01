@@ -1,7 +1,6 @@
 \chapter{Introduction}
 \label{ch:Introduction}
 
-
 \section{Motivation}
 \label{sec:Motivation}
 A common problem in massively parallel computations is the reduction (e.g. summation) of results over the entire cluster.
@@ -45,6 +44,13 @@ because of the different summation orders \cite{darriba_state_2018}.
 
 
 \section{Preliminaries}
-
+Let $\F$ be the set of floating-point numbers. Given
+\begin{itemize}
+\item a cluster of $p$ processing elements (PEs) indexed with $i \in \{0, \ldots, p - 1\}$
+\item $n_i$ floating-point numbers per PE ($N := \sum_{i=0}^{p-1} n_i$ in total)
+\item a not necessarily associative binary operation $\circ: \F \times \F \rightarrow \F$
+\end{itemize}
+we want to reduce all numbers by means of $\circ$ so that the end result is only dependent
+on $N$ and not on $p$.
 
 \label{sec:Preliminaries}

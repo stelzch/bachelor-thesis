@@ -15,7 +15,7 @@
 %% Available page modes: oneside, twoside
 %% Available languages: english, ngerman
 %% Available modes: draft, final (see README)
-\documentclass[twoside, english]{sdqthesis}
+\documentclass[oneside, english]{sdqthesis}
 
 %% ---------------------------------
 %% | Information about the thesis  |
@@ -77,6 +77,8 @@
 
 
 \directlua{dofile("scripts/tree.lua")}
+
+\newcommand{\F}{\mathbb{F}}
 
 \addbibresource{thesis.bib}
 
