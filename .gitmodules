@@ -1,0 +1,3 @@
+[submodule "allreduce-prep"]
+	path = allreduce-prep
+	url = git@github.com:stelzch/allreduce-prep.git

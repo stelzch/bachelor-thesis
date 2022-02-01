@@ -12,3 +12,18 @@
 
 \chapter{Binomial Tree Summation}
 \label{ch:BinomialTreeSummation}
+
+\begin{tikzpicture}
+
+\newcommand{\heightFactor}{0.7}
+\newcommand{\treeN}{8}
+\newcommand{\subtreeHeight}[2]{\directlua{tex.write(subtree_height(#1,#2))}}
+\newcommand{\parentIdx}[1]{\directlua{tex.write(parent(#1))}}
+\foreach \x in {0,...,\treeN} {
+	\node (idx\x{}) at (\x{},0) {\x};
+	
+	\draw (idx\x{})
+		-- (\x{},\heightFactor * \subtreeHeight{\x}{\treeN}+\heightFactor)
+		-- (\parentIdx{\x},\heightFactor * \subtreeHeight{\x}{\treeN}+\heightFactor);
+}
+\end{tikzpicture}
