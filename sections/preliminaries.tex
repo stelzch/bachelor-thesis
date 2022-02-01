@@ -1,8 +1,21 @@
-\chapter{Related Work}
-\label{ch:RelatedWork}
+\section{Preliminaries}
+\label{sec:Preliminaries}
+Let $\F$ be the set of floating-point numbers. Given
+\begin{itemize}
+\item a cluster of $p$ processing elements (PEs) indexed with $i \in \{0, \ldots, p - 1\}$
+\item $n_i$ floating-point numbers per PE ($N := \sum_{i=0}^{p-1} n_i$ in total)
+\item a not necessarily associative binary operation $\circ: \F \times \F \rightarrow \F$
+\end{itemize}
+we want to reduce all numbers by means of $\circ$ so that the end result is bitwise-reproducible.
+A reduction algorithm is called bitwise-reproducible if multiple executions over the same set of numbers with a variable
+number of PEs produces bit-per-bit the exact same results.
 
-\section{Sequential left-to-right reduction}
-\label{sec:SequentialLeftToRightAddition}
+
+\section{Related Work}
+\label{sec:RelatedWork}
+
+\subsection{Sequential left-to-right reduction}
+\label{sec:SequentialLeftToRightReduction}
 
 
 A naive approach to solving above problem is to gather all numbers on a single PE and then apply the reduction
@@ -13,52 +26,163 @@ x_0 \circ x_1 \circ x_2 \circ \ldots  \circ x_{N-1} = ((x_0 \circ x_1) \circ x_2
 \end{equation}
 
 While simple in implementation, this approach suffers from one major drawback. It does not benefit from any
-parallelization whatsoever. Through the communication overhead, performance might actually decrease with
+parallelization whatsoever. Through the communication overhead, performance decreases with
 an increasing number of PEs.
 
 
-\section{Reproducible Accumulators}
+\subsection{Reproducible Accumulators}
 \label{sec:Reproducible Accumulators}
-For floating-point summation in particular, Ahrens et al. have developed an algorithm that uses a 6-word accumulator
+For floating-point summation in particular, Ahrens et al.\ have developed an algorithm that uses a 6-word accumulator
 to avoid unpredictable rounding errors \cite{ahrens_algorithms_2020}. After a read-only pass over the input data,
 the summation can occur in parallel in no particular order and still produces bitwise identical results.
-However, this requires around $9N$ floating-point operations and $3N$ bitwise operations.
+This requires around $9N$ floating-point operations and $3N$ bitwise operations.
+The Reproducible Basic Linear Algebra Subprograms (ReproBLAS) software package implements this algorithm and
+exposes a user-friendly API.\@
 
-Naturally, this approach can not be extended to more general reduction operations, since it depends on specific properties
+Naturally, this approach is not suitable for more general reduction operations, since it depends on specific properties
 of floating-point numbers as specified in the IEEE 754 standard \cite{noauthor_ieee_nodate-1}.
 
 
-\section{Reduction Tree}
+\subsection{Reduction Tree}
 \label{sec:ReductionTree}
 
-\begin{figure}
+\begin{figure}[H]
 \centering
 \includegraphics[scale=0.7]{figures/villa_et_al_reduction_tree.pdf}
-\caption{Reduction tree. Figure extracted from \cite{villa_effects_2009}}
+\caption{Reduction tree (figure extracted from \cite{villa_effects_2009})}
 \label{fig:villa_reduction_tree}
 \end{figure}
 
 
-Villa et al. have utilized a binary tree structure on a Cray XMT system to sum floating-point numbers reproducibly \cite{villa_effects_2009}.
-After sequentially summing $K$ elements on each PE, their algorithm uses a parallel-prefix accumulation.
-Figure \ref{fig:villa_reduction_tree} gives a schematic overview of the calculation order.
+Villa et al.\ have utilized a $K$-ary tree structure on a Cray XMT system to sum floating-point numbers reproducibly \cite{villa_effects_2009}.
+Figure \ref{fig:villa_reduction_tree} gives a schematic overview of the calculation order. Each leaf node has a single summand assigned to it
+and each inner node sums up its up to $K$ child nodes. The algorithm then feeds the computed subtotal as input to the next layer of inner nodes.
+$\log_K (N)$ levels of summations suffice to reduce all input numbers into a single value. Because the summation order only depends on the total number
+of summands $N$ and the constant $K$, it should be reproducible across differently sized clusters.
 
-Since the original source code is not available even after contacting the authors, the inner workings of this algorithm are subject to speculation only.
+The original source code is not available even after contacting the authors however, therefore the exact inner workings of this algorithm are
+subject to speculation only.
 
-\chapter{Binomial Tree Summation}
-\label{ch:BinomialTreeSummation}
+\chapter{Binary Tree Summation}
+\label{ch:BinaryTreeSummation}
 
+\newcommand{\numLevels}{\lceil \log_2 N \rceil}
+\newcommand{\ffs}{\textrm{ffs}}
+
+\begin{figure}[H]
+\centering
 \begin{tikzpicture}
+% sample calculation
+\node (A) at (0,2) {13};
+\node (B) at (0,1) {5};
+\node (C) at (0,0) {3};
+\node (D) at (1,0) {2};
+\node (E) at (2,0) {7};
+\draw (C) -- (B);
+\draw (B) -- (A);
+\draw (D) -- (1,1) -- (B);
+\draw (E) -- (2,2) -- (A);
+\draw (A) -- (0,3);
 
+
+% coordinate system
+\node (A) at (5,2) {(0,2)};
+\node (B) at (5,1) {(0,1)};
+\node (C) at (5,0) {(0,0)};
+\node (D) at (6,0) {(1,0)};
+\node (E) at (7,0) {(2,0)};
+\draw (C) -- (B);
+\draw (B) -- (A);
+\draw (D) -- (6,1) -- (B);
+\draw (E) -- (7,2) -- (A);
+\draw (A) -- (5,3);
+\end{tikzpicture}
+\caption{Sample calculation of the sum of $3$, $2$ and $7$ and corresponding coordinate system}
+\label{fig:coordinateExample}
+\end{figure}
+
+In this chapter, we present a special case (where $K = 2$) of the reduction tree from section \ref{sec:ReductionTree}.
+To compute the sum of $N$ floating-point numbers (from here on called summands), we construct a binary tree with $N$ leaf nodes,
+each corresponding to a single summand.
+By iteratively connecting adjacent nodes, we produce inner nodes that represent the subtotal obtained when adding up their children.
+After $\numLevels$ levels, all summands have been reduced into a single sum represented by the root node.
+The left side of figure \ref{fig:coordinateExample} demonstrates this addition scheme.
+
+We can uniquely identify nodes by using \textbf{coordinates} $(x, y)$. The leaf nodes are assigned coordinates
+$(0,0)$ through $(N-1,0)$ and the coordinates of inner nodes are obtained by adopting the $x$-coordinate of their left child and incrementing
+the $y$-coordinate by $1$. Figure \ref{fig:coordinateExample} shows coordinates for all nodes in a binary tree with $N = 3$ leaf nodes.
+A summand is said to have index $i$ if its corresponding leaf node has the coordinates $(i,0)$.
+
+Indices can also be represented as a binary number with $\numLevels$ digits, since
+\begin{equation}
+2^{\numLevels} \geq 2^{\log_2 N} = N
+\end{equation}
+If we interpret the digits of an index ordered from most to least significant as a series of decisions where $0$ means \enquote{go down}
+and $1$ means \enquote{go right and down}, each index encodes a path from the tree root to the corresponding leaf node:
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
 \newcommand{\heightFactor}{0.7}
 \newcommand{\treeN}{8}
 \newcommand{\subtreeHeight}[2]{\directlua{tex.write(subtree_height(#1,#2))}}
 \newcommand{\parentIdx}[1]{\directlua{tex.write(parent(#1))}}
 \foreach \x in {0,...,\treeN} {
-	\node (idx\x{}) at (\x{},0) {\x};
+	\node [anchor=north] (idx\x{}) at (\x{},0) {\x};
 	
-	\draw (idx\x{})
+	\draw (\x{},0)
 		-- (\x{},\heightFactor * \subtreeHeight{\x}{\treeN}+\heightFactor)
 		-- (\parentIdx{\x},\heightFactor * \subtreeHeight{\x}{\treeN}+\heightFactor);
 }
+
+% Highlighted path
+\draw [very thick,red] (6,0) -- (6, 2 * \heightFactor) -- (4, 2* \heightFactor) -- (4, 3*\heightFactor) -- (0, 3*\heightFactor) -- (0,5*\heightFactor);
+\node [red] at (0-0.3, 3.5*\heightFactor) {0};
+\node [red] at (4-0.3, 2.5*\heightFactor) {1};
+\node [red] at (6-0.3, 1.5*\heightFactor) {1};
+\node [red] at (6-0.3, 0.5*\heightFactor) {0};
+
+\node at (10,2) {$6_{10} = 0110_2$};
 \end{tikzpicture}
+\caption{Example path for index $6$ with $N = 10$}
+\label{fig:indexTreePath}
+\end{figure}
+
+For any given $x$-coordinate ($x > 0$), the \textbf{maximum $y$-coordinate} is equal to the position of the first (least significant) bit set in $x$ minus 1,
+which is equal to the number of trailing zeros. We denote this expression as $\ffs (x) - 1$. The term $\ffs$ is adopted from the eponymous function
+of the C library \texttt{strings.h}.
+The path representation explains why the equality holds: the least significant bit is the last time the $x$-coordinate has changed, since all
+trailing zeros encode the decision \enquote{go down}.
+
+
+%\begin{figure}[H]
+%\centering
+%\begin{tikzpicture}
+%\definecolor{shade1}{rgb}{87 77 104}
+%\definecolor{shade2}{rgb}{163 133 96}
+%\definecolor{shade3}{rgb}{198 161 91}
+%
+%\newcommand{\heightFactor}{0.7}
+%\newcommand{\treeN}{8}
+%\newcommand{\subtreeHeight}[2]{\directlua{tex.write(subtree_height(#1,#2))}}
+%\newcommand{\parentIdx}[1]{\directlua{tex.write(parent(#1))}}
+%\foreach \x in {0,...,\treeN} {
+%	\node (idx\x{}) at (\x{},0) {\x};
+%	
+%	\draw (idx\x{})
+%		-- (\x{},\heightFactor * \subtreeHeight{\x}{\treeN}+\heightFactor)
+%		-- (\parentIdx{\x},\heightFactor * \subtreeHeight{\x}{\treeN}+\heightFactor);
+%}
+%
+%\draw [very thick, dashed, rounded corners, teal] (-0.5,-0.5)  rectangle (2.4,3.5);
+%\draw [very thick, dashed, rounded corners, olive]  (2.6, -0.5) rectangle (5.4,2.5);
+%\draw [very thick, dashed, rounded corners, brown] (5.6, -0.5) rectangle (8.4,3.5);
+%
+%\node at (1,-1) {PE 0};
+%\node at (4,-1) {PE 1};
+%\node at (7,-1) {PE 2};
+%
+%\end{tikzpicture}
+%\caption{Distributed binary tree with $N=9$ leaf nodes and $p=3$ PEs.}
+%\label{fig:distributed_binary_tree}
+%\end{figure}
