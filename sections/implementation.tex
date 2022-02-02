@@ -1,6 +1,60 @@
 \chapter{Implementation}
 \label{ch:Implementation}
 
+While the recursive formula given in equation \eqref{eq:nodeSum} already defines a summation algorithm, its implementation in imperative languages would
+heavily rely on the call stack to store subtotals. In practice, performing the calculations in opposite direction, bottom-up rather than top-down, yields
+better runtimes. In this chapter, we deduce the necessary equations to implement the accumulation algorithm.
+
+Indices can also be represented as a binary number with $\numLevels$ digits, since
+\begin{equation}
+2^{\numLevels} \geq 2^{\log_2 N} = N
+\end{equation}
+If we interpret the digits of an index ordered from most to least significant as a series of decisions where $0$ means \enquote{go down}
+and $1$ means \enquote{go right and down}, each index encodes a path from the tree root to the corresponding leaf node:
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\newcommand{\heightFactor}{0.7}
+\newcommand{\treeN}{8}
+\newcommand{\subtreeHeight}[2]{\directlua{tex.write(subtree_height(#1,#2))}}
+\newcommand{\parentIdx}[1]{\directlua{tex.write(parent(#1))}}
+\foreach \x in {0,...,\treeN} {
+	\node [anchor=north] (idx\x{}) at (\x{},0) {\x};
+	
+	\draw (\x{},0)
+		-- (\x{},\heightFactor * \subtreeHeight{\x}{\treeN}+\heightFactor)
+		-- (\parentIdx{\x},\heightFactor * \subtreeHeight{\x}{\treeN}+\heightFactor);
+}
+
+% Highlighted path
+\draw [very thick,red] (6,0) -- (6, 2 * \heightFactor) -- (4, 2* \heightFactor) -- (4, 3*\heightFactor) -- (0, 3*\heightFactor) -- (0,5*\heightFactor);
+\node [red] at (0-0.3, 3.5*\heightFactor) {0};
+\node [red] at (4-0.3, 2.5*\heightFactor) {1};
+\node [red] at (6-0.3, 1.5*\heightFactor) {1};
+\node [red] at (6-0.3, 0.5*\heightFactor) {0};
+
+\node at (10,2) {$6_{10} = 0110_2$};
+\end{tikzpicture}
+\caption{Example path for index $6$ with $N = 10$}
+\label{fig:indexTreePath}
+\end{figure}
+
+For any given $x$-coordinate ($x > 0$), the \textbf{maximum $y$-coordinate} $\max_y(x)$ is equal to the position of the first (least significant) bit set in $x$ minus 1,
+which is equal to the number of trailing zeros. We denote this expression as $\ffs (x) - 1$. The term $\ffs$ is adopted from the eponymous function
+of the C library \texttt{strings.h}.
+The path representation explains why the equality holds: the least significant bit is the last time the $x$-coordinate has changed, since all
+trailing zeros encode the decision \enquote{go down}.
+
+The \textbf{parent node} of an inner node $(x, \max_y(x))$ is obtained by replacing the last (least-significant) \enquote{go right and down} decision
+with \enquote{go down}. Numerically, this is equivalent to cancelling the least significant bit of $x$ and can be quickly calculated with the
+expression $x \wedge (x - 1)$, where $\wedge$ is the bitwise AND-operation. Thus, we obtain the following definition of the parent function:
+
+\begin{equation}
+\label{eq:parent}
+\textrm{parent} (x, \max_y (x) ) := (x \wedge (x - 1), y + 1)
+\end{equation}
+
 \section{Applied Optimizations}
 \label{sec:AppliedOptimizations}
 
