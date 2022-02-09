@@ -2,13 +2,13 @@
 \label{sec:Preliminaries}
 Let $\F$ be the set of floating-point numbers. Given
 \begin{itemize}
-\item a cluster of $p$ processing elements (PEs) indexed with $i \in \{0, \ldots, p - 1\}$
-\item $n_i$ floating-point numbers per PE ($N := \sum_{i=0}^{p-1} n_i$ in total)
+\item a cluster of $p$ \glspl{pe} indexed with $i \in \{0, \ldots, p - 1\}$
+\item $n_i$ floating-point numbers per \gls{pe} ($N := \sum_{i=0}^{p-1} n_i$ in total)
 \item a not necessarily associative binary operation $\circ: \F \times \F \rightarrow \F$
 \end{itemize}
 we want to reduce all numbers by means of $\circ$ so that the end result is bitwise-reproducible.
 A reduction algorithm is called bitwise-reproducible if multiple executions over the same set of numbers with a variable
-number of PEs produces bit-per-bit the exact same results.
+number of \glspl{pe} produces bit-per-bit the exact same results.
 
 
 \section{Related Work}
@@ -27,7 +27,7 @@ x_0 \circ x_1 \circ x_2 \circ \ldots  \circ x_{N-1} = ((x_0 \circ x_1) \circ x_2
 
 While simple in implementation, this approach suffers from one major drawback. It does not benefit from any
 parallelization whatsoever. Through the communication overhead, performance decreases with
-an increasing number of PEs.
+an increasing number of \glspl{pe}.
 
 
 \subsection{Reproducible Accumulators}
@@ -132,10 +132,11 @@ with every step in direction $y$. The summation equation for inner nodes therefo
 Equation \eqref{eq:nodeSumBaseCase} is necessary to ensure that our summation scheme is well-defined even if $N$ is not a power of $2$,
 since in this case the right child-node coordinate as calculated in \eqref{eq:nodeSum} might actually overflow.
 
-As of right now, the binary tree summation has no obvious advantages compared to sequential left-to-right addition. It requires the same amount of
+From the current point of view, the binary tree summation has no obvious advantages compared to sequential left-to-right addition.
+It requires the same amount of
 additions, it even requires more memory since a single accumulator does not suffice to store all subtotals. The benefits become visible if we
-incorporate PE-boundaries into our model. Recall that our task is to sum $N$ summands over $p$ PEs. We can split up our binary tree across
-multiple PEs by distributing the summands. Figure \ref{fig:distributed_binary_tree} shows an example where nine summands are distributed
+incorporate \gls{pe}-boundaries into our model. Recall that our task is to sum $N$ summands over $p$ \glspl{pe}. We can split up our binary tree across
+multiple \glspl{pe} by distributing the summands. Figure \ref{fig:distributed_binary_tree} shows an example where nine summands are distributed
 across three processing elements.
 \begin{figure}[H]
 \centering
@@ -160,17 +161,17 @@ across three processing elements.
 \draw [very thick, dashed, rounded corners, olive]  (2.6, -0.5) rectangle (5.4,2.5);
 \draw [very thick, dashed, rounded corners, brown] (5.6, -0.5) rectangle (8.4,3.5);
 
-\node at (1,-1) {PE 0};
-\node at (4,-1) {PE 1};
-\node at (7,-1) {PE 2};
+\node at (1,-1) {\acrshort{pe} 0};
+\node at (4,-1) {\acrshort{pe} 1};
+\node at (7,-1) {\acrshort{pe} 2};
 
 \end{tikzpicture}
-\caption{Distributed binary tree with $N=9$ leaf nodes and $p=3$ PEs.}
+\caption{Distributed binary tree with $N=9$ leaf nodes and $p=3$ \glspl{pe}.}
 \label{fig:distributed_binary_tree}
 \end{figure}
 The degree of parallelization now becomes visible. Summations $(0) + (1)$, $(4) + (5)$ and $(6) + (7)$ can all be performed in parallel, since
-they do not depend on any external data. Other calculations do however require communication between the PEs. A node is called PE-intersecting
-whenever its parent node is assigned to a different PE. In our example in figure \ref{fig:distributed_binary_tree}, leaf nodes $3$ and $8$ are examples
-for PE-intersecting nodes.
-Recall from section \ref{sec:Preliminaries} that PEs have an index $i$ and that $n_i$ is the number of summands assigned to PE with the corresponding
-index. A node with coordinates $(x, y)$ is assigned to a PE if the summand with index $x$ is assigned to the PE as well.
+they do not depend on any external data. Other calculations do however require communication between the \acrshort{pe}s. A node is called \acrshort{pe}-intersecting
+whenever its parent node is assigned to a different \gls{pe}. In our example in figure \ref{fig:distributed_binary_tree}, leaf nodes $3$ and $8$ are examples
+for \gls{pe}-intersecting nodes.
+Recall from section \ref{sec:Preliminaries} that \gls{pe}s have an index $i$ and that $n_i$ is the number of summands assigned to \gls{pe} with the corresponding
+index. A node with coordinates $(x, y)$ is assigned to a \gls{pe} if the summand with index $x$ is assigned to the \gls{pe} as well.

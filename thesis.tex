@@ -76,11 +76,17 @@
 \usepackage{pgffor}
 \usetikzlibrary {graphs}
 \usepackage{luacode}
+\usepackage[acronym]{glossaries}
+\usepackage{algorithm2e}
+\usepackage{algpseudocode}
 
+\makeglossaries
+\newacronym{pe}{PE}{processing element (e.g. a CPU core)}
 
 \directlua{dofile("scripts/tree.lua")}
 
 \newcommand{\F}{\mathbb{F}}
+\newcommand{\BitAnd}{\mathbin{\&}}
 
 \addbibresource{thesis.bib}
 

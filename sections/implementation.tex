@@ -46,14 +46,71 @@ of the C library \texttt{strings.h}.
 The path representation explains why the equality holds: the least significant bit is the last time the $x$-coordinate has changed, since all
 trailing zeros encode the decision \enquote{go down}.
 
-The \textbf{parent node} of an inner node $(x, \max_y(x))$ is obtained by replacing the last (least-significant) \enquote{go right and down} decision
+The \textbf{parent node} of an inner node $(x, \max_x(y))$ is obtained by replacing the last (least-significant) \enquote{go right and down} decision
 with \enquote{go down}. Numerically, this is equivalent to cancelling the least significant bit of $x$ and can be quickly calculated with the
-expression $x \wedge (x - 1)$, where $\wedge$ is the bitwise AND-operation. Thus, we obtain the following definition of the parent function:
+expression $x \BitAnd (x - 1)$, where $\BitAnd$ is the bitwise AND-operation. Thus, we obtain the following definition of the parent function:
 
 \begin{equation}
 \label{eq:parent}
-\textrm{parent} (x, \max_y (x) ) := (x \wedge (x - 1), y + 1)
+\textrm{parent} (x, \max_x (y) ) := (x \BitAnd (x - 1), y + 1)
 \end{equation}
+
+Recall from section \ref{sec:Preliminaries} that each \gls{pe} $i$ (where $i \in [0, P - 1]$) stores $n_i$ consecutive summands.
+The global index of the first summand assigned to a rank is called the start index and is equal to the prefix sums of the assigned number of summands:
+
+\begin{align}
+\textrm{startIndex} (0) &= 0 \\
+\textrm{startIndex} (i) &= \sum_{j = 0}^{i - 1} n_i
+\label{eq:startIndex}
+\end{align}
+
+This allows us to define the function rankFromIndex, which computes the index of a \gls{pe} that stores a given summand:
+\begin{equation}
+\textrm{rankFromIndex} (x) = \max \{i \in [0, P - 1] \;|\; \textrm{startIndex} (i) \leq x \}
+\end{equation}
+
+The definition of the set of \gls{pe}-intersecting summand indices also depends on the rankFromIndex function:
+
+\newcommand{\rankIntersectingIndices}{I_{\textrm{\gls{pe}-intersecting}}}
+\begin{equation}
+\rankIntersectingIndices (I) = \{i \in I \;|\; \textrm{rankFromIndex} (i) \neq \textrm{rankFromIndex} (\textrm{parent} (i)) \}
+\end{equation}
+
+\begin{algorithm}
+\caption{Summation procedure}\label{algo:SummationAlgo}
+\DontPrintSemicolon
+\SetAlgoLined
+$startIndex \gets \textrm{startIndices} (rank)$\;
+$endIndex \gets startIndex + n_{\textrm{rank}}$\;
+\For{$i \gets \rankIntersectingIndices ([\textrm{startIndex}, \textrm{endIndex}]) $}{
+	\For{$y \gets [1, \max_x(y)]$}{
+		$x \gets startIndex$\;
+		\While{$x < endIndex$}{
+			$a \gets (x, y - 1)$\;
+			$indexB \gets x + 2^{y - 1}$\;
+			\uIf{$indexB \geq N$} {
+				$(x,y) \gets a$\;
+			}
+			\uElseIf{$\textrm{rankFromIndex}(indexB) \neq rank$}{
+				$b \gets \textrm{fetch}\ indexB$\;
+				$(x,y) \gets a + b$\;
+			}
+			\Else{
+				$b \gets (indexB, y-1)$\;
+				$(x,y) \gets a + b$\;
+			}
+			$x \gets x + 2^{y - 1}$\;
+		}
+	}
+}
+\end{algorithm}
+
+Algorithm \ref{algo:SummationAlgo} shows to complete procedure that each \gls{pe} follows. It consists of three nested loops, the most outer one
+iterates over all \gls{pe}-intersecting indices in ascending order.
+This is necessary because our summation follows the post-order tree-traversal and leftmost subtrees of a given partition are accumulated more quickly
+by their parent \gls{pe}. The next loop implements the bottom-up scheme that was discussed at the beginning of this chapter, the $y$-values are
+incremented with each iteration. Finally, the inner loop iterates over values of $x$ and sums up adjacent nodes. There is some logic necessary to avoid
+out-of-bounds memory access ($indexB \geq N$) and deal with \gls{pe}-boundaries ($rankFromIndex(indexB) \neq rank$).
 
 \section{Applied Optimizations}
 \label{sec:AppliedOptimizations}
@@ -61,8 +118,72 @@ expression $x \wedge (x - 1)$, where $\wedge$ is the bitwise AND-operation. Thus
 \subsection{Message Buffering}
 \label{sec:MessageBuffering}
 
+Depending on the distribution of summands, the first few \gls{pe}-intersecting nodes may have the same parent \gls{pe}. In these cases, the communication
+overhead outweighs the actual computational effort of summation and bundling messages results in performance gains. The current implementation
+utilizes a buffer with a maximum of $4$ summands per message. After the summation routine has computed a \gls{pe}-intersecting subtotal, it is placed
+in a outbound message buffer. Flushing of the buffer occurs in either one of the following cases: \begin{itemize}
+\item The summation routine inserts another \gls{pe}-intersecting summand into the buffer which has a different target \gls{pe}
+\item The summation routine begins work on a subtotal whose subtree size is greater than $64$ summands
+\end{itemize}
+
+The buffer utilization averages about $1.2$ summands per message, further tests have shown that relaxing above flushing criteria does not
+yield a runtime benefit, presumably because of the induced latency.
+
 \subsection{Data Distribution}
 \label{sec:DataDistribution}
+
+If the user is in control of the summand distribution, multiple optimization techniques arise. To quantify them, we propose the following model:
+
+\begin{equation}
+\label{eq:distributionScore}
+\textrm{Score} = t_{\textrm{MPI\_Send}} * n_{\textrm{\gls{pe} Intersecting Numbers}} + \max \{ i \in [0, p - 1]\, |\, n_i * t_{\textrm{add}} \}
+\end{equation}
+
+$t_{\textrm{MPI\_Send}}$ and $t_\textrm{add}$ are estimates of the time needed to send a single summand between two \glspl{pe} and addition of two
+floating-point values with double precision (64 bit) respectively. On the shared-memory machine \textit{i10pc138}\footnote{See Appendix for hardware specifications}, these
+estimates were empirically measured to be $t_{\textrm{MPI\_Send}} \approx 281ns$ and $t_\textrm{add} \approx 4.15ns$. While this model does not
+take any data dependencies between subtotals into account, it balances the performance gain achieved by parallelization (represented by a low maximum
+on the right side of equation \eqref{eq:distributionScore} against the communication overhead caused by binary tree fragmentation. 
+
+In this section we will evaluate multiple approaches to the optimization of the data distribution with an example dataset with $N = 504 850$ summands
+and $p = 256$ \glspl{pe}.
+
+
+\subsubsection{Even distribution}
+This is the base case where each \gls{pe} has the same number of summands. If the total number of summands $N$ is not divisible by the number of
+\glspl{pe}, the remainder will be put on the \glspl{pe} with the highest rank:
+
+\begin{equation}
+\label{eq:evenDistribution}
+n_i (N, p) = \begin{cases}
+\lfloor \tfrac{N}{p} \rfloor & i < N - N \bmod p \\
+\lfloor \tfrac{N}{p} \rfloor + 1 & \textrm{otherwise}
+\end{cases}
+\end{equation}
+
+In our model, the even distribution ensures maximal parallelization of the computational effort, since the maximum difference in the workload of a
+\gls{pe} is $1$. With our test dataset, $1401$ messages are necessary, a score that can easily be bested.
+
+\subsubsection{Round down to power of 2}
+Since most messages are caused by \gls{pe}-boundaries that cut the binary tree at \enquote{inconvenient} places, in a first attempt of data distribution
+optimization we round down the number of assigned summands down to the nearest power of $2$,
+the reasoning being that powers of $2$ have a lot of trailing
+zeros and start indices with a lot of trailing zeros produce larger \gls{pe}-local subtrees, thus reducing the need for outbound messages.
+
+\begin{equation}
+\label{eq:roundDownPower2Distribution}
+n_i (N, p) = \begin{cases}
+2^{\lfloor \log_2 \frac{N}{p} \rfloor} & i < p - 1\\
+N - \sum_{i=0}^{p-2} n_i (N,p) & i = p - 1
+\end{cases}
+\end{equation}
+
+The rounding decreases the amount of messages considerably. With our test dataset, the message count is in the vicinity of the lower bound of $p - 1$, only
+256 messages are needed, $20\%$ compared to the even distribution. This comes at the cost of an unbalanced summand distribution, the \gls{pe}
+with the highest rank, where the remaining summands are stored, contains almost half the summands.
+The inefficient parallelization is penalized with the second term of our score function, causing the score to be $2.7\times$ higher compared to
+the even distribution.
+
 
 \subsection{Index-lookup Hashmap}
 \label{sec:IndexLookupHashmap}
