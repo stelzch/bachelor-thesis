@@ -165,6 +165,7 @@ In our model, the even distribution ensures maximal parallelization of the compu
 \gls{pe} is $1$. With our test dataset, $1401$ messages are necessary, a score that can easily be bested.
 
 \subsubsection{Round down to power of 2}
+\label{sec:roundDownPower2Distribution}
 Since most messages are caused by \gls{pe}-boundaries that cut the binary tree at \enquote{inconvenient} places, in a first attempt of data distribution
 optimization we round down the number of assigned summands down to the nearest power of $2$,
 the reasoning being that powers of $2$ have a lot of trailing
@@ -183,6 +184,54 @@ The rounding decreases the amount of messages considerably. With our test datase
 with the highest rank, where the remaining summands are stored, contains almost half the summands.
 The inefficient parallelization is penalized with the second term of our score function, causing the score to be $2.7\times$ higher compared to
 the even distribution.
+
+\subsubsection{Optimized-Index Distribution}
+As seen in the previous section \ref{sec:roundDownPower2Distribution}, unbounded distribution optimization yields small message counts at the expense
+of computational imbalance. In this section we will present a method to optimize the data distribution within certain bounds, to balance communication
+and computational costs.
+
+First, let $I_\textrm{start}(i)$ be a function that maps a \gls{pe}-index $i$ to the index of the first summand located on that \gls{pe}:
+
+\begin{align}
+\label{eq:startIndexDefinition}
+I_\textrm{start}(0) &= 0 \\
+I_\textrm{start}(i) &= \sum_{j=0}^{i - 1} n_i
+\end{align}
+
+Furthermore, let $\textrm{fairShare} = \tfrac{N}{p}$ be the average number of summands per \gls{pe} in an equivalent even distribution. We want to optimize each $I_\textrm{start}$ to cut off the least amount of edges while maintaining a fairly even distribution. This requirement can be expressed as follows:
+\begin{equation}
+\label{eq:optimizedIndexBounds}
+\forall i \in \{1, \ldots, p - 1\}: I_\textrm{start}(i) - I'_\textrm{start}(i) \leq \alpha * \textrm{fairShare}
+\end{equation}
+where $I'_\textrm{start}$ is our optimized start index and $\alpha$ is the maximum deviation relative to the even distribution. We now can iteratively
+improve our start index by applying the parent function \eqref{eq:parent} until we are about to exceed the predefined bounds:
+
+\begin{algorithm}
+\caption{Index optimization procedure}\label{algo:optimizeIndex}
+\DontPrintSemicolon
+\SetAlgoLined
+\SetKwInOut{Input}{input}
+
+\Input{\gls{pe}-index $i$, start index $j$, maximum deviation parameter $\alpha$}
+
+$currentIndex = j$\;
+$proposedIndex = currentIndex$\;
+
+\While{$\textrm{initialIndex} - \textrm{proposedIndex} \leq \alpha * \tfrac{N}{p}$} {
+	$currentIndex = proposedIndex$\;
+	$proposedIndex = parent(initialIndex)$\;
+}
+\end{algorithm}
+
+By hand-tuning the parameter $\alpha = 0.0005$ with $N = 239 763$, $p = 256$ the runtimes  measured over $40 000$ repetitions are plotted in figure
+\ref{fig:distribution_runtimes}. The runtime benefit is clearly visible, the optimized distribution is about $4µs$ faster than the even distribution.
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.75]{figures/distribution_experiment}
+\caption{Runtime comparison of unoptimized vs. optimized data distribution}
+\label{fig:distribution_runtimes}
+\end{figure}
 
 
 \subsection{Index-lookup Hashmap}
