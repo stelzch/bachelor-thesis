@@ -3,9 +3,10 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
-def fetch_median(cur, result_id):
+def fetch_median_stddev(cur, result_id):
     cur.execute("SELECT time_ns FROM durations WHERE result_id = ?", (result_id,))
-    return np.median(cur.fetchall())
+    values = cur.fetchall()
+    return np.median(values), np.std(values)
 
 
 
@@ -33,17 +34,19 @@ def fetch_slowdown_data(cur,commit,min_core_count,slower_mode,comparison_mode):
     Y = [] # slowdown
     for row in cur.fetchall():
         n, a_id, b_id = row
-        slowdown = fetch_median(cur, b_id) / fetch_median(cur, a_id)
+        slowdown = fetch_median_stddev(cur, b_id)[0] / fetch_median(cur, a_id)[0]
         X.append(n)
         Y.append(slowdown)
-    print(X)
-    print(Y)
     return X, Y
 
 def plot_slowdown(output_path, data):
     f = plt.figure()
     plt.scatter(data[0], data[1])
     plt.savefig(output_path)
+
+def plot_scaling(cur, commit, min_core_count, mode, description):
+    cur.execute("SELECT id,date,hostname,description FROM runs WHERE revision = ? AND cluster_size >= ? AND description = ? ORDER BY date DESC LIMIT 1",
+            (commit, min_cluster_size, description))
 
 
 
