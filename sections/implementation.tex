@@ -80,7 +80,7 @@ The definition of the set of \gls{pe}-intersecting summand indices also depends 
 \caption{Summation procedure}\label{algo:SummationAlgo}
 \DontPrintSemicolon
 \SetAlgoLined
-$startIndex \gets \textrm{startIndices} (rank)$\;
+$startIndex \gets startIndices (rank)$\;
 $endIndex \gets startIndex + n_{\textrm{rank}}$\;
 \For{$i \gets \rankIntersectingIndices ([\textrm{startIndex}, \textrm{endIndex}]) $}{
 	\For{$y \gets [1, \max_x(y)]$}{
@@ -223,7 +223,7 @@ $proposedIndex = currentIndex$\;
 }
 \end{algorithm}
 
-By hand-tuning the parameter $\alpha = 0.0005$ with $N = 239 763$, $p = 256$ the runtimes  measured over $40 000$ repetitions are plotted in figure
+After hand-tuning the parameter $\alpha = 0.0005$ with $N = 239 763$, $p = 256$ the runtimes measured over $40 000$ repetitions are plotted in figure
 \ref{fig:distribution_runtimes}. The runtime benefit is clearly visible, the optimized distribution is about $4µs$ faster than the even distribution.
 
 \begin{figure}
@@ -237,5 +237,107 @@ By hand-tuning the parameter $\alpha = 0.0005$ with $N = 239 763$, $p = 256$ the
 \subsection{Index-lookup Hashmap}
 \label{sec:IndexLookupHashmap}
 
+\begin{figure}
+\centering
+\includegraphics[scale=0.55]{figures/microbenchmark_rank_from_index.eps}
+\caption{Microbenchmark comparison of unoptimized and optimized $rankFromIndex$ function}
+\label{fig:microbenchmarkRankFromIndex}
+
+\end{figure}
+
+Algorithm \ref{algo:SummationAlgo} uses the $rankFromIndex$ function to lookup the \gls{pe}-rank for a given summand index. This function
+maps the binary tree structure to the actual computing topology and its
+execution speed is performance-critical due to its position inside a frequently executed loop.
+
+The initial implementation used a loop to find the first entry
+in the $startIndices$ array which numerically exceeds the input index.
+The runtime of this algorithm is $O(p)$, where $p$ is once again the number
+of \glspl{pe}.
+Micro-benchmarks revealed the linearily increasing runtime and the need for optimization (see figure \ref{fig:microbenchmarkRankFromIndex}).
+The currently
+implemented version uses a hash map to scan for the start index, which yields a runtime in $O(\log(p))$.
+
 \subsection{Vectorization}
 \label{sec:Vectorization}
+
+Recent advances in computing power can largely be attributed to increased parallelism.
+To utilize the capabilities of modern CPUs to the fullest, \gls{simd} techniques must be employed.
+
+Compared to the simple left-to-right reduction presented in section
+\ref{sec:SequentialLeftToRightReduction}, a reduction tree lends itself better to parallelization, since an algorithm can accumulate partial sums independently. The implementation at hand uses x86 \gls{avx}, specifically AVX-2.
+AVX-2 registers are $256$ bits wide and can therefore store four double precision floating-point numbers. Algorithm \ref{algo:AVXTreeAccumulation} uses two registers to sum eight summands at once.
+Because AVX-2 manipulate data within 128-bit lanes, it is necessary to extract the upper 128-bit after the first horizontal add in order to follow the correct summation order.
+Figure \ref{fig:avxSchema} displays the register contents over time.
+
+
+\begin{algorithm}
+\caption{8-tree reduction with AVX-2 instructions}
+\label{algo:AVXTreeAccumulation}
+\DontPrintSemicolon
+\SetAlgoLined
+
+$a \gets mm256\_load\_pd(buffer[i])$\;
+$b \gets mm256\_load\_pd(buffer[i + 4])$\;
+$level1Sum \gets mm256\_hadd\_pd(a,b)$\;
+
+$c \gets mm256\_extractf128\_pd(level1Sum 1)$\;
+$d \gets mm256\_castpd256\_pd128(level1Sum)$\;
+$level2Sum \gets mm\_add\_pd(c, d)$\;
+
+$level3Sum \gets mm\_hadd\_pd(level2Sum, level2Sum)$\;
+
+$result \gets mm\_cvtsd\_f64(level3Sum)$\;
+\end{algorithm}
+
+\begin{figure}
+\begin{tikzpicture}[
+block/.style={draw,minimum width=1.6cm, text centered,minimum height=0.8cm,font=\small}]
+
+\node[block,left=0.8cm of {0,0}](d){$D$};
+\node[block,left=0cm of d](c){$C$};
+\node[block,left=0cm of c](b){$B$};
+\node[block,left=0cm of b](a){$A$};
+
+
+
+
+\node[block,right=0.8cm of {0,0}](e){$E$};
+\node[block,right=0cm of e](f){$F$};
+\node[block,right=0cm of f](g){$G$};
+\node[block,right=0cm of g](h){$H$};
+
+
+
+\node[block,below=2cm of {-2.4,0}](ab){$A+B$};
+\node[block,right=0cm of ab](ef){$E+F$};
+\node[block,right=0cm of ef](cd){$C+D$};
+\node[block,right=0cm of cd](gh){$G+H$};
+
+\node[below=0.8cm of {0,0}](op1) {$\_mm256\_hadd\_pd$};
+\path[->,very thick] (d) edge (-1.6,-2);
+\path[->,very thick] (e) edge (1.6,-2);
+
+\node[block,below=4cm of c](ab2){$A+B$};
+\node[block,right=0cm of ab2](ef2){$E+F$};
+\node[block,below=4cm of e](cd2){$C+D$};
+\node[block,right=0cm of cd2](gh2){$G+H$};
+\path[->,very thick] (-1.6,-2.8) edge (-2.4,-4.4);
+\path[->,very thick] (1.6,-2.8) edge (2.4,-4.4);
+\node[left=0.6cm of {-2.0,-3.6}] (op2) {$\_mm256\_extractf128\_pd$};
+\node[right=0.6cm of {2.0,-3.6}] (op3) {$\_mm256\_castpd256\_pd128$};
+
+\node[block,left=0cm of {0,-7}](abcd){$(A+B)+(C+D)$};
+\node[block,right=0cm of abcd](efgh){$(E+F)+(G+H)$};
+\path[->,very thick] (-2.4,-5.2) edge (-2,-6.6);
+\path[->,very thick] (2.4,-5.2) edge (2,-6.6);
+\node[above=0.4cm of {0,-6.6}](op4) {$\_mm\_add\_pd$};
+
+\node[block,left=0cm of {0,-9}](abcdefgh){$((A+B)+(C+D))+((E+F)+(G+H))$};
+\node[block,right=0cm of abcdefgh](abcdefgh2){$((A+B)+(C+D))+((E+F)+(G+H))$};
+\path[->,very thick] (0,-7.4) edge (0,-8.6);
+\node[right=0.4cm of {0,-8}](op5) {$\_mm\_hadd\_pd$};
+
+\end{tikzpicture}
+\caption{Register content during AVX-2 subtree summation}
+\label{fig:avxSchema}
+\end{figure}
