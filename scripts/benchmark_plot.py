@@ -152,6 +152,38 @@ def violin_plot(run_id, datasetQuery):
     plt.subplots_adjust(left=0.15, bottom=0.0 + margin_y, right=0.98, top=1.0 - margin_y)
     return f
 
+def slowdown_plot(run_id):
+    plot_data = fetch_durations(run_id)
+    formatter0 = EngFormatter(places=2)
+
+    X = []
+    slowdowns = []
+
+    n_cores = plot_data[0][0]['m']
+    for p in plot_data:
+        n = p[0]['n']
+        mode = lambda mode: (lambda x: x['mode'] == mode)
+        tree_data = next(filter(mode('tree'), p))
+        reproblas_data = next(filter(mode('reproblas'), p))
+
+        tree_median = median(tree_data['durations'])
+        reproblas_median = median(reproblas_data['durations'])
+
+        slowdown = tree_median / reproblas_median
+        X.append(n)
+        slowdowns.append(slowdown)
+
+    f, ax = plt.subplots(1)
+
+    ax.set_title(f"Slowdown of Tree compared to ReproBLAS with p={n_cores} cores")
+    ax.yaxis.set_label("Slowdown")
+    ax.xaxis.set_label("number of summands")
+    ax.xaxis.set_major_formatter(formatter0)
+
+    ax.scatter(X, slowdowns)
+
+    return f
+
 def last_complete_benchmark(p=256):
     cur.execute("""
         SELECT run.id, COUNT(result.id) FROM runs run, results result
@@ -164,11 +196,13 @@ def last_complete_benchmark(p=256):
         """, (p,))
     return cur.fetchone()[0]
     
-    
-scatter_plot(last_complete_benchmark()).savefig("figures/benchmarkScatter.pdf")
-violin_plot(last_complete_benchmark(), '%354%').savefig("figures/violin354.pdf")
-violin_plot(last_complete_benchmark(), '%rokasD4%').savefig("figures/violinRokasD4.pdf")
-violin_plot(last_complete_benchmark(), '%rokasD7%').savefig("figures/violinRokasD7.pdf")
+last_complete = 69 # last_complete_benchmark()
+print(f"Utilizing results from run {last_complete}")
+scatter_plot(last_complete).savefig("figures/benchmarkScatter.pdf")
+violin_plot(last_complete, '%354%').savefig("figures/violin354.pdf")
+violin_plot(last_complete, '%rokasD4%').savefig("figures/violinRokasD4.pdf")
+violin_plot(last_complete, '%rokasD7%').savefig("figures/violinRokasD7.pdf")
+slowdown_plot(last_complete).savefig("figures/slowdownPlot.pdf")
 
 # In[ ]:
 

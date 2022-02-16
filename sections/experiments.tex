@@ -26,7 +26,7 @@ aa\_rokasA8 & $504\,850$ \\
 dna\_rokasD1 & $1\,327\,505$ \\
 aa\_rokasA4 & $1\,806\,035$ \\
 dna\_PeteD8 & $3\,011\,099$ \\
-dna\_rokasD7 & $21\,¸410\,970$ \\
+dna\_rokasD7 & $21\,410\,970$ \\
 \end{tabular}
 \caption{Overview of benchmark datasets}
 \label{table:datasets}
@@ -50,9 +50,28 @@ Each benchmark run performs the following steps for each summation mode (\texttt
 \label{fig:benchmarkOverview}
 \end{figure}
 
+\begin{figure}
+\centering
+\includegraphics[scale=0.8]{figures/slowdownPlot.pdf}
+\caption{Relative slowdown of binary tree summation compared to ReproBLAS}
+\label{fig:slowdownPlot}
+\end{figure}
+
 Figure \ref{fig:benchmarkOverview} shows the runtime measurements across all datasets as scatter plot.
 Error bars depict the standard deviation of measurements.
+All measured summation algorithms have a runtime that is linear in the number of summands. For most datasets, ReproBLAS is faster than Allreduce and Allreduce is faster than binary tree summation.
 
+Figure \ref{fig:slowdownPlot} shows the exact relative slowdown of binary tree summation compared to ReproBLAS.
+While the slowdown on small datasets varies greatly (presumably due to the chaotic message count behaviour discussed in section \ref{sec:messageCount}), for larger datasets the slowdown approaches $1$, meaning binary tree summation is almost as fast as ReproBLAS.
+Figure \ref{fig:violinRokasD7} shows the exact distribution of runtimes for the largest dataset.
+
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.8]{figures/violinRokasD7.pdf}
+\caption{Runtime distribution for all three summation modes on the dataset \textit{rokasD7}}
+\label{fig:violinRokasD7}
+\end{figure}
 
 
 \section{Verification of Reproducibility}
