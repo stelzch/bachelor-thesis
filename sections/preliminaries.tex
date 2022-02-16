@@ -3,7 +3,7 @@
 Let $\F$ be the set of floating-point numbers. Given
 \begin{itemize}
 \item a cluster of $p$ \glspl{pe} indexed with a rank $i \in \{0, \ldots, p - 1\}$ and interconnected by a \gls{mpi}
-\item $n_i$ floating-point numbers per \gls{pe} ($N := \sum_{i=0}^{p-1} n_i$ in total)
+\item $n_i$ floating-point numbers (elements) per \gls{pe} ($N := \sum_{i=0}^{p-1} n_i$ in total)
 \item a not necessarily associative binary operation $\circ: \F \times \F \rightarrow \F$
 \end{itemize}
 we want to reduce all numbers by means of $\circ$ so that the end result is bitwise-reproducible.
@@ -18,16 +18,15 @@ number of \glspl{pe} produces bit-per-bit the exact same results.
 \label{sec:SequentialLeftToRightReduction}
 
 
-A naive approach to solving above problem is to gather all numbers on a single PE and then apply the reduction
-operation strictly from left to right:
+A naive approach to solving above problem is to gather all elements on a single PE and then apply the reduction operation strictly from left to right:
 
 \begin{equation}
 x_0 \circ x_1 \circ x_2 \circ \ldots  \circ x_{N-1} = ((x_0 \circ x_1) \circ x_2) \circ \ldots
 \end{equation}
 
-While simple in implementation, this approach suffers from one major drawback. It does not benefit from any
-parallelization whatsoever. Through the communication overhead, performance decreases with
-an increasing number of \glspl{pe}.
+While simple in implementation, this approach suffers from one major drawback:
+It does not benefit from any parallelization whatsoever.
+Through the communication overhead, performance decreases with an increasing number of \glspl{pe}.
 
 
 \subsection{Reproducible Accumulators}
@@ -39,8 +38,7 @@ This requires around $9N$ floating-point operations and $3N$ bitwise operations.
 The Reproducible Basic Linear Algebra Subprograms (ReproBLAS) software package implements this algorithm and
 exposes a user-friendly API.\@
 
-Naturally, this approach is not suitable for more general reduction operations, since it depends on specific properties
-of floating-point numbers as specified in the IEEE 754 standard \cite{noauthor_ieee_nodate-1}.
+Naturally, this approach is not suitable for general reduction operations, since it depends on specific properties of floating-point numbers as specified in the IEEE 754 standard \cite{noauthor_ieee_nodate-1}.
 
 
 \subsection{Reduction Tree}
@@ -49,7 +47,7 @@ of floating-point numbers as specified in the IEEE 754 standard \cite{noauthor_i
 \begin{figure}[H]
 \centering
 \includegraphics[scale=0.7]{figures/villa_et_al_reduction_tree.pdf}
-\caption{Reduction tree (figure extracted from \cite{villa_effects_2009})}
+\caption{General reduction tree (figure from Villa et al. \cite{villa_effects_2009})}
 \label{fig:villa_reduction_tree}
 \end{figure}
 
@@ -63,7 +61,7 @@ of summands $N$ and the constant $K$, it should be reproducible across different
 The original source code is not available even after contacting the authors however, therefore the exact inner workings of this algorithm are
 subject to speculation only.
 
-\chapter{Binary Tree Summation}
+\chapter{Binary Tree Reduction}
 \label{ch:BinaryTreeSummation}
 
 \newcommand{\numLevels}{\lceil \log_2 N \rceil}
@@ -74,8 +72,8 @@ subject to speculation only.
 \centering
 \begin{tikzpicture}
 % sample calculation
-\node (A) at (0,2) {13};
-\node (B) at (0,1) {5};
+\node (A) at (0,2) {$(3 \reduce 2) \reduce 7$};
+\node (B) at (0,1) {$3 \reduce 2$};
 \node (C) at (0,0) {3};
 \node (D) at (1,0) {2};
 \node (E) at (2,0) {7};
@@ -98,45 +96,45 @@ subject to speculation only.
 \draw (E) -- (7,2) -- (A);
 \draw (A) -- (5,3);
 \end{tikzpicture}
-\caption{Sample calculation of the sum of $3$, $2$ and $7$ and corresponding coordinate system}
+\caption{Sample reduction of $3$, $2$ and $7$ and corresponding coordinate system}
 \label{fig:coordinateExample}
 \end{figure}
 
-In this chapter, we present a special case (where $K = 2$ and $\circ = +$) of the reduction tree from section \ref{sec:ReductionTree}.
-To compute the sum of $N$ floating-point numbers (from here on called summands), we construct a binary tree with $N$ leaf nodes,
-each corresponding to a single summand.
-By iteratively connecting adjacent nodes, we produce inner nodes that represent the subtotal obtained when adding up their children.
-After $\numLevels$ levels, all summands have been reduced into a single sum represented by the root node.
-The left side of figure \ref{fig:coordinateExample} demonstrates this addition scheme. In a first step, number $3$ and $2$ are added together.
-Since $7$ has no adjacent node, it is left as is. In the next layer, the two remaining numbers $5$ and $7$ are summed up, producing the final
-result $13$.
+In this chapter, we present a special case (where $K = 2$) of the reduction tree from section \ref{sec:ReductionTree}.
+To reduce $N$ elements, we construct a binary tree with $N$ leaf nodes,
+each corresponding to a single element.
+By iteratively connecting adjacent nodes, we produce inner nodes that represent the intermediate result obtained by reducing their children.
+After $\numLevels$ levels, all elements have been reduced into a single element represented by the root node.
+The left side of figure \ref{fig:coordinateExample} demonstrates this reduction scheme. In a first step, number $3$ and $2$ are reduced.
+Since $7$ has no adjacent node, it is left as is. In the next layer, the two remaining elements $5$ and $7$ are reduced, producing the final
+result $(3 \reduce 2) \reduce 7$ in the root node.
 
 We can uniquely identify nodes by using \textbf{coordinates} $(x, y)$. The leaf nodes are assigned coordinates
 $(0,0)$ through $(N-1,0)$ and the coordinates of inner nodes are obtained by adopting the $x$-coordinate of their left child and incrementing
 the $y$-coordinate by $1$. Figure \ref{fig:coordinateExample} shows coordinates for all nodes in a binary tree with $N = 3$ leaf nodes.
-A summand is said to have index $i$ if its corresponding leaf node has the coordinates $(i,0)$.
+An element is said to have index $i$ if its corresponding leaf node has the coordinates $(i,0)$.
 
 As can be easily seen in figure \ref{fig:coordinateExample}, the distance in $x$-direction between the child nodes of inner nodes doubles
-with every step in direction $y$. The summation equation for inner nodes therefore is
+with every step in direction $y$. The reduction equation for inner nodes therefore is
 
 \begin{align}
-\nodesum (x, y) &= \underbrace{\nodesum (x, y - 1)}_{\textrm{left child}}
-+ \underbrace{\nodesum (x + 2^{y - 1}, y - 1)}_{\textrm{right child}} \label{eq:nodeSum} \\
-\nodesum (x, 0) &= \begin{cases}
-\textrm{summand with index $x$} & x < N \\
+\reduceFunc (x, y) &= \underbrace{\reduceFunc (x, y - 1)}_{\textrm{left child}}
+\reduce \underbrace{\reduceFunc (x + 2^{y - 1}, y - 1)}_{\textrm{right child}} \label{eq:nodeReduce} \\
+\reduceFunc (x, 0) &= \begin{cases}
+\textrm{element x} & x < N \\
 0 & \textrm{otherwise}
 \end{cases}
-\label{eq:nodeSumBaseCase}
+\label{eq:nodeReduceBaseCase}
 \end{align}
 
-Equation \eqref{eq:nodeSumBaseCase} is necessary to ensure that our summation scheme is well-defined even if $N$ is not a power of $2$,
-since in this case the right child-node coordinate as calculated in \eqref{eq:nodeSum} might actually overflow.
+Equation \eqref{eq:nodeReduceBaseCase} is necessary to ensure that our reduction scheme is well-defined even if $N$ is not a power of $2$,
+since in this case the right child-node coordinate as calculated in \eqref{eq:nodeReduce} might actually overflow.
 
-From the current point of view, the binary tree summation has no obvious advantages compared to sequential left-to-right addition.
+From the current point of view, the binary tree reduction has no obvious advantages compared to sequential left-to-right reduction.
 It requires the same amount of
-additions, it even requires more memory since a single accumulator does not suffice to store all subtotals. The benefits become visible if we
-incorporate \gls{pe}-boundaries into our model. Recall that our task is to sum $N$ summands over $p$ \glspl{pe}. We can split up our binary tree across
-multiple \glspl{pe} by distributing the summands. Figure \ref{fig:distributed_binary_tree} shows an example where nine summands are distributed
+reduction operations, it even requires more memory since a single accumulator does not suffice to store all intermediate results. The benefits become visible if we
+incorporate \gls{pe}-boundaries into our model. Recall that our task is to reduce $N$ elements over $p$ \glspl{pe}. We can split up our binary tree across
+multiple \glspl{pe} by distributing the elements. Figure \ref{fig:distributed_binary_tree} shows an example where nine elements are distributed
 across three processing elements.
 \begin{figure}[H]
 \centering
@@ -169,12 +167,12 @@ across three processing elements.
 \caption{Distributed binary tree with $N=9$ leaf nodes and $p=3$ \glspl{pe}.}
 \label{fig:distributed_binary_tree}
 \end{figure}
-The degree of parallelization now becomes visible. Summations $(0) + (1)$, $(4) + (5)$ and $(6) + (7)$ can all be performed in parallel, since
-they do not depend on any external data. Other calculations do however require communication between the \acrshort{pe}s. A node is called \acrshort{pe}-intersecting
+The degree of parallelization now becomes visible. Reductions $(0) \reduce (1)$, $(4) \reduce (5)$ and $(6) \reduce (7)$ can all be performed in parallel, since
+they do not depend on any external data. Other calculations do however require communication between the \glspl{pe}. A node is called \gls{pe}-intersecting
 whenever its parent node is assigned to a different \gls{pe}. In our example in figure \ref{fig:distributed_binary_tree}, leaf nodes $3$ and $8$ are examples
 for \gls{pe}-intersecting nodes.
-Recall from section \ref{sec:Preliminaries} that \gls{pe}s have an index $i$ and that $n_i$ is the number of summands assigned to \gls{pe} with the corresponding
-index. A node with coordinates $(x, y)$ is assigned to a \gls{pe} if the summand with index $x$ is assigned to the \gls{pe} as well.
+Recall from section \ref{sec:Preliminaries} that \gls{pe}s have an index $i$ and that $n_i$ is the number of elements assigned to the \gls{pe} with the corresponding
+index. A node with coordinates $(x, y)$ is assigned to a \gls{pe} if the element with index $x$ is assigned to the \gls{pe} as well.
 
 \section{Message counts}
 The main hinderance to efficient parallelization as outlined in the previous section is the need for synchronization between \glspl{pe} because of data dependencies in the form of \gls{pe}-intersecting nodes.
@@ -200,7 +198,7 @@ The function behaves chaotically and displays large differences in message count
 The lower bound of message counts is $p - 1$, since all \glspl{pe} with a rank larger than $0$ must send at least one subtotal to the root \gls{pe}.
 The global minima is attained at $N = 2^i * p$, where $i \in \mathbb{N}$.
 Local maxima can be observed at $N = 2^i * p + 1$, directly following the global minima.
-This most likely is an effect of the remainder distribution if $N \mod p \neq 0$, since some of the message count spikes can be eliminated if the remaining elements are placed on the highest instead of the lowest ranks (see figure \ref{fig:messageCount256RemainderAtEnd}).
+This most likely is an effect of the remainder distribution if $N \bmod p \neq 0$, since some of the message count spikes can be eliminated if the remaining elements are placed on the highest instead of the lowest ranks (see figure \ref{fig:messageCount256RemainderAtEnd}).
 
 Equation \eqref{eq:worstcaseMessageCount} is a closed-form approximation of the worst case message count for the unoptimized data distribution where the remaining elements are placed on lower ranks:
 \begin{equation}
