@@ -2,7 +2,7 @@
 \label{sec:Preliminaries}
 Let $\F$ be the set of floating-point numbers. Given
 \begin{itemize}
-\item a cluster of $p$ \glspl{pe} indexed with $i \in \{0, \ldots, p - 1\}$
+\item a cluster of $p$ \glspl{pe} indexed with a rank $i \in \{0, \ldots, p - 1\}$ and interconnected by a \gls{mpi}
 \item $n_i$ floating-point numbers per \gls{pe} ($N := \sum_{i=0}^{p-1} n_i$ in total)
 \item a not necessarily associative binary operation $\circ: \F \times \F \rightarrow \F$
 \end{itemize}
@@ -175,3 +175,36 @@ whenever its parent node is assigned to a different \gls{pe}. In our example in 
 for \gls{pe}-intersecting nodes.
 Recall from section \ref{sec:Preliminaries} that \gls{pe}s have an index $i$ and that $n_i$ is the number of summands assigned to \gls{pe} with the corresponding
 index. A node with coordinates $(x, y)$ is assigned to a \gls{pe} if the summand with index $x$ is assigned to the \gls{pe} as well.
+
+\section{Message counts}
+The main hinderance to efficient parallelization as outlined in the previous section is the need for synchronization between \glspl{pe} because of data dependencies in the form of \gls{pe}-intersecting nodes.
+The target implementation utilizes the \gls{mpi} to communicate between different \glspl{pe} and since the messages are small (one double precision float point value occupies 8 bytes or 64 bits), the total number of messages is a good indicator of the communication overhead.
+Under the assumption that no message buffering or any other form of bundling is employed, the message count is equal to the number of \gls{pe}-intersecting nodes.
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.7]{figures/message_count_256.pdf}
+\caption{Message counts for different dataset sizes on a cluster with $p=256$ \glspl{pe}}
+\label{fig:messageCount256}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.7]{figures/message_count_256_remainder_at_end.pdf}
+\caption{Message counts with a differing data distribution (remaining elements placed on higher ranks) for $p=256$}
+\label{fig:messageCount256RemainderAtEnd}
+\end{figure}
+
+Figure \ref{fig:messageCount256} shows the number of messages depending on the data set size.
+The function behaves chaotically and displays large differences in message counts for small differences in dataset sizes.
+The lower bound of message counts is $p - 1$, since all \glspl{pe} with a rank larger than $0$ must send at least one subtotal to the root \gls{pe}.
+The global minima is attained at $N = 2^i * p$, where $i \in \mathbb{N}$.
+Local maxima can be observed at $N = 2^i * p + 1$, directly following the global minima.
+This most likely is an effect of the remainder distribution if $N \mod p \neq 0$, since some of the message count spikes can be eliminated if the remaining elements are placed on the highest instead of the lowest ranks (see figure \ref{fig:messageCount256RemainderAtEnd}).
+
+Equation \eqref{eq:worstcaseMessageCount} is a closed-form approximation of the worst case message count for the unoptimized data distribution where the remaining elements are placed on lower ranks:
+\begin{equation}
+\label{eq:worstcaseMessageCount}
+M_{\textrm{worstcase}}(N) = (p - 1) (\log_2 \Big( \frac{N - 1}{p} \Big) + 1)
+\end{equation}
+Under the assumption that the number of \glspl{pe} is constant, the message count $M$ therefore is in $O(\log(N))$.
