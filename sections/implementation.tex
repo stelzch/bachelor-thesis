@@ -1,11 +1,12 @@
 \chapter{Implementation}
 \label{ch:Implementation}
 
-While the recursive formula given in equation \eqref{eq:nodeReduce} already defines a summation algorithm, its implementation in imperative languages would
-heavily rely on the call stack to store subtotals. In practice, performing the calculations in opposite direction, bottom-up rather than top-down, yields
-better runtimes. In this chapter, we deduce the necessary equations to implement the accumulation algorithm.
+While the recursive formula given in equation \eqref{eq:nodeReduceReduction} already defines a reduction algorithm, its implementation in imperative languages would heavily rely on the call stack to store subtotals.
+In practice, performing the calculations in opposite direction, bottom-up rather than top-down, yields better runtimes.
+In this chapter, we deduce the necessary equations to implement the reduction algorithm.
+We focus on summation, thus our reduction operation $\reduce$ is simple floating-point addition.
 
-Indices can also be represented as a binary number with $\numLevels$ digits, since
+Element indices can be represented as a binary number with $\numLevels$ digits, since
 \begin{equation}
 2^{\numLevels} \geq 2^{\log_2 N} = N
 \end{equation}

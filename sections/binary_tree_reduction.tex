@@ -14,10 +14,12 @@
 \node (C) at (0,0) {3};
 \node (D) at (1,0) {2};
 \node (E) at (2,0) {7};
+\node (F) at (2,1) {7};
 \draw (C) -- (B);
 \draw (B) -- (A);
 \draw (D) -- (1,1) -- (B);
-\draw (E) -- (2,2) -- (A);
+\draw (E) -- (F);
+\draw (F) -- (2,2) -- (A);
 \draw (A) -- (0,3);
 
 
@@ -27,10 +29,12 @@
 \node (C) at (5,0) {(0,0)};
 \node (D) at (6,0) {(1,0)};
 \node (E) at (7,0) {(2,0)};
+\node (F) at (7,1) {(2,1)};
 \draw (C) -- (B);
 \draw (B) -- (A);
 \draw (D) -- (6,1) -- (B);
-\draw (E) -- (7,2) -- (A);
+\draw (E) -- (F);
+\draw (F) -- (7,2) -- (A);
 \draw (A) -- (5,3);
 \end{tikzpicture}
 \caption{Sample reduction of $3$, $2$ and $7$ and corresponding coordinate system}
@@ -54,25 +58,36 @@ An element is said to have index $i$ if its corresponding leaf node has the coor
 As can be easily seen in figure \ref{fig:coordinateExample}, the distance in $x$-direction between the child nodes of inner nodes doubles
 with every step in direction $y$. The reduction equation for inner nodes therefore is
 
-\begin{align}
-\reduceFunc (x, y) &= \underbrace{\reduceFunc (x, y - 1)}_{\textrm{left child}}
-\reduce \underbrace{\reduceFunc (x + 2^{y - 1}, y - 1)}_{\textrm{right child}} \label{eq:nodeReduce} \\
-\reduceFunc (x, 0) &= \begin{cases}
-\textrm{element x} & x < N \\
-0 & \textrm{otherwise}
-\end{cases}
-\label{eq:nodeReduceBaseCase}
-\end{align}
+$$
+\begin{numcases}{\reduceFunc (x,y) =}
+\textrm{element with index } x, & for $y = 0$ \label{eq:nodeReduceBaseCase} \\
+\reduceFunc (x, y - 1), & for $x+2^{y-1} \geq N$ \label{eq:nodeReducePassthrough} \\
+\underbrace{\reduceFunc(x, y - 1)}_{\textrm{left child}} \reduce \underbrace{\reduceFunc (x + 2^{y-1}, y - 1)}_{\textrm{right child}}, & otherwise \label{eq:nodeReduceReduction}
+\end{numcases}
+$$
 
-Equation \eqref{eq:nodeReduceBaseCase} is necessary to ensure that our reduction scheme is well-defined even if $N$ is not a power of $2$,
-since in this case the right child-node coordinate as calculated in \eqref{eq:nodeReduce} might actually overflow.
+Equation \eqref{eq:nodeReduceBaseCase} defines the base case where no further reductions are necessary.
+If $N$ is not a power of $2$, there might not always be an adjacent node that can be connected.
+In this case, the node is left as is, which is reflected in equation \eqref{eq:nodeReducePassthrough}.
+Finally, equation \eqref{eq:nodeReduceReduction} defines the actual recursive reduction strategy of child nodes.
+The complete reduction is expressed by applying the $\reduceFunc$-function to the root node: $\reduceFunc (0, \lceil \log_2 N \rceil)$.
+To take up the example from figure \ref{fig:coordinateExample} again:
+\begin{alignat*}{2}
+\reduceFunc (0, \lceil \log_2 N \rceil) &= \reduceFunc(0, 2)  &\hspace{2em}&\rlap{\footnotesize Apply \eqref{eq:nodeReduceReduction}}\\
+&= \reduceFunc (0,1) \reduce \reduceFunc(2,1) &&\rlap{\footnotesize Apply \eqref{eq:nodeReduceReduction}} \\
+&= (\reduceFunc(0,0) \reduce \reduceFunc (0,1)) \reduce \reduceFunc(2,1) &&\rlap{\footnotesize Apply \eqref{eq:nodeReducePassthrough}} \\
+&= (\reduceFunc(0,0) \reduce \reduceFunc (0,1)) \reduce \reduceFunc(2,0) &&\rlap{\footnotesize Apply \eqref{eq:nodeReduceBaseCase}}\\
+&= (3 \reduce 2) \reduce 7 &&
+\end{alignat*}
 
 From the current point of view, the binary tree reduction has no obvious advantages compared to sequential left-to-right reduction.
-It requires the same amount of
-reduction operations, it even requires more memory since a single accumulator does not suffice to store all intermediate results. The benefits become visible if we
-incorporate \gls{pe}-boundaries into our model. Recall that our task is to reduce $N$ elements over $p$ \glspl{pe}. We can split up our binary tree across
-multiple \glspl{pe} by distributing the elements. Figure \ref{fig:distributed_binary_tree} shows an example where nine elements are distributed
-across three processing elements.
+It requires the same amount of reduction operations, it even requires more memory since a single accumulator does not suffice to store all intermediate results.
+The benefits only become visible if we incorporate \gls{pe}-boundaries into our model.
+Recall that our task is to reduce $N$ elements over $p$ \glspl{pe}.
+We can split up our binary tree across multiple \glspl{pe} by distributing the elements.
+A node with coordinates $(x, y)$ is assigned to a \gls{pe} if the element with index $x$ is assigned to the \gls{pe}.
+
+Figure \ref{fig:distributed_binary_tree} shows an example where nine elements are distributed across three processing elements.
 \begin{figure}[H]
 \centering
 \begin{tikzpicture}
@@ -105,11 +120,10 @@ across three processing elements.
 \label{fig:distributed_binary_tree}
 \end{figure}
 The degree of parallelization now becomes visible. Reductions $(0) \reduce (1)$, $(4) \reduce (5)$ and $(6) \reduce (7)$ can all be performed in parallel, since
-they do not depend on any external data. Other calculations do however require communication between the \glspl{pe}. A node is called \gls{pe}-intersecting
-whenever its parent node is assigned to a different \gls{pe}. In our example in figure \ref{fig:distributed_binary_tree}, leaf nodes $3$ and $8$ are examples
-for \gls{pe}-intersecting nodes.
-Recall from section \ref{sec:Preliminaries} that \gls{pe}s have an index $i$ and that $n_i$ is the number of elements assigned to the \gls{pe} with the corresponding
-index. A node with coordinates $(x, y)$ is assigned to a \gls{pe} if the element with index $x$ is assigned to the \gls{pe} as well.
+they do not depend on any external data and are located on different \glspl{pe}.
+Other calculations do however require communication between the \glspl{pe}.
+A node is called \gls{pe}-intersecting whenever one of its child node is assigned to a different \gls{pe}.
+In our example in figure \ref{fig:distributed_binary_tree}, the parent nodes of the leaf nodes $3$ and $8$ are examples of \gls{pe}-intersecting nodes.
 
 \section{Message counts}
 The main hinderance to efficient parallelization as outlined in the previous section is the need for synchronization between \glspl{pe} because of data dependencies in the form of \gls{pe}-intersecting nodes.
@@ -118,16 +132,21 @@ Under the assumption that no message buffering or any other form of bundling is 
 
 \begin{figure}
 \centering
+\begin{subfigure}{0.7\textwidth}
+\centering
 \includegraphics[scale=0.7]{figures/message_count_256.pdf}
-\caption{Message counts for different dataset sizes on a cluster with $p=256$ \glspl{pe}}
+\caption{Remaining elements assigned to the lower ranks}
 \label{fig:messageCount256}
-\end{figure}
-
-\begin{figure}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.7\textwidth}
 \centering
 \includegraphics[scale=0.7]{figures/message_count_256_remainder_at_end.pdf}
-\caption{Message counts with a differing data distribution (remaining elements placed on higher ranks) for $p=256$}
+\caption{Remaining elements assigned to the higher ranks}
 \label{fig:messageCount256RemainderAtEnd}
+\end{subfigure}
+
+\caption{Simulated message counts for different dataset sizes on a cluster with $p=256$ \glspl{pe}}
 \end{figure}
 
 Figure \ref{fig:messageCount256} shows the number of messages depending on the data set size.
