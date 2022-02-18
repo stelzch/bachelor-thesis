@@ -58,13 +58,11 @@ An element is said to have index $i$ if its corresponding leaf node has the coor
 As can be easily seen in figure \ref{fig:coordinateExample}, the distance in $x$-direction between the child nodes of inner nodes doubles
 with every step in direction $y$. The reduction equation for inner nodes therefore is
 
-$$
 \begin{numcases}{\reduceFunc (x,y) =}
 \textrm{element with index } x, & for $y = 0$ \label{eq:nodeReduceBaseCase} \\
 \reduceFunc (x, y - 1), & for $x+2^{y-1} \geq N$ \label{eq:nodeReducePassthrough} \\
 \underbrace{\reduceFunc(x, y - 1)}_{\textrm{left child}} \reduce \underbrace{\reduceFunc (x + 2^{y-1}, y - 1)}_{\textrm{right child}}, & otherwise \label{eq:nodeReduceReduction}
 \end{numcases}
-$$
 
 Equation \eqref{eq:nodeReduceBaseCase} defines the base case where no further reductions are necessary.
 If $N$ is not a power of $2$, there might not always be an adjacent node that can be connected.
