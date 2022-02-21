@@ -53,10 +53,8 @@ Naturally, this approach is not suitable for general reduction operations, since
 
 
 Villa et al.\ have utilized a $K$-ary tree structure on a Cray XMT system to sum floating-point numbers reproducibly \cite{villa_effects_2009}.
-Figure \ref{fig:villa_reduction_tree} gives a schematic overview of the calculation order. Each leaf node has a single summand assigned to it
-and each inner node sums up its up to $K$ child nodes. The algorithm then feeds the computed subtotal as input to the next layer of inner nodes.
-$\log_K (N)$ levels of summations suffice to reduce all input numbers into a single value. Because the summation order only depends on the total number
-of summands $N$ and the constant $K$, it should be reproducible across differently sized clusters.
+Figure \ref{fig:villa_reduction_tree} gives a schematic overview of the calculation order.
+Using parallel-prefix accumulation, they compute the sum of $N$ summands in $\log_K (N)$ steps, where $K$ determines how many numbers are accumulated sequentially in each step.
+The reproducibility stems from the fact that the reduction tree only depends on the total number of summands $N$ and the constant $K$, therefore the same calculation order is used even if the cluster size differs.
 
-The original source code is not available even after contacting the authors however, therefore the exact inner workings of this algorithm are
-subject to speculation only.
+The original source code is not available even after contacting the authors, therefore the exact inner workings of this algorithm and runtime comparisons are subject to speculation only.

@@ -47,7 +47,7 @@ each corresponding to a single element.
 By iteratively connecting adjacent nodes, we produce inner nodes that represent the intermediate result obtained by reducing their children.
 After $\numLevels$ levels, all elements have been reduced into a single element represented by the root node.
 The left side of figure \ref{fig:coordinateExample} demonstrates this reduction scheme. In a first step, number $3$ and $2$ are reduced.
-Since $7$ has no adjacent node, it is left as is. In the next layer, the two remaining elements $5$ and $7$ are reduced, producing the final
+Since $7$ has no adjacent node, it is left as is. In the next layer, the two remaining elements $3 \reduce 2$ and $7$ are reduced, producing the final
 result $(3 \reduce 2) \reduce 7$ in the root node.
 
 We can uniquely identify nodes by using \textbf{coordinates} $(x, y)$. The leaf nodes are assigned coordinates
@@ -66,8 +66,9 @@ with every step in direction $y$. The reduction equation for inner nodes therefo
 
 Equation \eqref{eq:nodeReduceBaseCase} defines the base case where no further reductions are necessary.
 If $N$ is not a power of $2$, there might not always be an adjacent node that can be connected.
-In this case, the node is left as is, which is reflected in equation \eqref{eq:nodeReducePassthrough}.
+In this case, the value is simply passed on to the next level, which is reflected in equation \eqref{eq:nodeReducePassthrough}.
 Finally, equation \eqref{eq:nodeReduceReduction} defines the actual recursive reduction strategy of child nodes.
+
 The complete reduction is expressed by applying the $\reduceFunc$-function to the root node: $\reduceFunc (0, \lceil \log_2 N \rceil)$.
 To take up the example from figure \ref{fig:coordinateExample} again:
 \begin{alignat*}{2}
@@ -125,7 +126,7 @@ In our example in figure \ref{fig:distributed_binary_tree}, the parent nodes of 
 
 \section{Message counts}
 The main hinderance to efficient parallelization as outlined in the previous section is the need for synchronization between \glspl{pe} because of data dependencies in the form of \gls{pe}-intersecting nodes.
-The target implementation utilizes the \gls{mpi} to communicate between different \glspl{pe} and since the messages are small (one double precision float point value occupies 8 bytes or 64 bits), the total number of messages is a good indicator of the communication overhead.
+The target implementation utilizes the \gls{mpi} to communicate between different \glspl{pe} and since the messages are small (one double precision floating-point value occupies 8 bytes, or 64 bits), the total number of messages is a good indicator of the communication overhead.
 Under the assumption that no message buffering or any other form of bundling is employed, the message count is equal to the number of \gls{pe}-intersecting nodes.
 
 \begin{figure}
@@ -147,7 +148,7 @@ Under the assumption that no message buffering or any other form of bundling is 
 \caption{Simulated message counts for different dataset sizes on a cluster with $p=256$ \glspl{pe}}
 \end{figure}
 
-Figure \ref{fig:messageCount256} shows the number of messages depending on the data set size.
+Figure \ref{fig:messageCount256} shows the number of messages depending on the dataset size.
 The function behaves chaotically and displays large differences in message counts for small differences in dataset sizes.
 The lower bound of message counts is $p - 1$, since all \glspl{pe} with a rank larger than $0$ must send at least one subtotal to the root \gls{pe}.
 The global minima is attained at $N = 2^i * p$, where $i \in \mathbb{N}$.

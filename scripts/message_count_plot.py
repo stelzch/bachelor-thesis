@@ -18,7 +18,7 @@ def plot_message_count(p, maxN, message_count_func, ylim=None):
     Y = np.array(message_count_func(list(X), p))
     f = plt.figure()
     ax = f.subplots(1)
-    ax.set_xlabel("Number of summands")
+    ax.set_xlabel("Number of elements")
     ax.set_ylabel("Number of messages")
     
     if ylim is not None:
