@@ -10,6 +10,21 @@ we want to reduce all numbers by means of $\circ$ so that the end result is bitw
 A reduction algorithm is called bitwise-reproducible if multiple executions over the same set of numbers with a variable
 number of \glspl{pe} produces bit-per-bit the exact same results.
 
+In order to correctly distribute the $N$ elements over $p$ \glspl{pe}, we need to deal with cases where $N$ is not divisible by $p$.
+Let $a := \lfloor \tfrac{N}{p} \rfloor$ be the rounded number of elements per \gls{pe}.
+We can assign the remaining $N \bmod p$ elements to the upper or lower ranks:
+\begin{align}
+\label{eq:lowerDistribution}
+n_i^{\textrm{lower}} &= \begin{cases}
+    a + 1 & \textrm{if } i < N \bmod p \\
+    a & \textrm{otherwise}
+\end{cases} \\
+\label{eq:upperDistribution}
+n_i^{\textrm{upper}} &= \begin{cases}
+    a & \textrm{if } i < N - (N \bmod p) \\
+    a + 1 & \textrm{otherwise}
+\end{cases}
+\end{align}
 
 \section{Related Work}
 \label{sec:RelatedWork}

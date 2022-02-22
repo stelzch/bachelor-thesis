@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import EngFormatter
 
 
-def plot_message_count(p, maxN, message_count_func, ylim=None):
+def plot_message_count(p, maxN, message_count_func, ylim=None, includeUpperBound=False):
     X = np.arange(p, maxN, dtype=np.uint)
     Y = np.array(message_count_func(list(X), p))
     f = plt.figure()
@@ -24,10 +24,18 @@ def plot_message_count(p, maxN, message_count_func, ylim=None):
     if ylim is not None:
         ax.set_ylim(top=ylim)
 
-    plt.plot(X, Y)
+    plt.plot(X, Y, label='Actual message count')
+
+    if includeUpperBound:
+        plt.plot(X, (p - 1) * (np.log2((X - 1) / p) + 1), label="Upper bound")
+        plt.legend()
+
+    f.tight_layout()
     
     return f
 
 
-f1 = plot_message_count(256, 200_000, message_count, ylim=2500).savefig("figures/message_count_256.pdf")
-f2 = plot_message_count(256, 200_000, message_count_remainder_at_end, ylim=2500).savefig("figures/message_count_256_remainder_at_end.pdf")
+f1 = plot_message_count(256, 200_000, message_count, ylim=2900, includeUpperBound=True) \
+    .savefig("figures/message_count_256.pdf")
+f2 = plot_message_count(256, 200_000, message_count_remainder_at_end, ylim=2900) \
+    .savefig("figures/message_count_256_remainder_at_end.pdf")
