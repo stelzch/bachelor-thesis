@@ -1,17 +1,17 @@
 \chapter{Implementation}
 \label{ch:Implementation}
 
-While the recursive formula given in equation \eqref{eq:nodeReduceReduction} already defines a reduction algorithm, its implementation in imperative languages would heavily rely on the call stack to store subtotals.
-In practice, performing the calculations in opposite direction, bottom-up rather than top-down, yields better runtimes.
 In this chapter, we deduce the necessary equations to implement the reduction algorithm.
-We focus on summation, thus our reduction operation $\reduce$ is simple floating-point addition.
+We focus on summation, our reduction operator $\reduce$ is the simple floating-point addition.
+While the recursive formula given in \Cref{eq:nodeReduceReduction} already defines a reduction algorithm, its implementation in imperative languages would heavily rely on the call stack to store subtotals.
+In practice, performing the calculations in opposite direction, bottom-up instead of than top-down, yields better runtimes.
 
-Element indices can be represented as a binary number with $\numLevels$ digits, since
+The bionary representation of element indices has $\numLevels$ digits, since
 \begin{equation}
 2^{\numLevels} \geq 2^{\log_2 N} = N
 \end{equation}
-If we interpret the digits of an index ordered from most to least significant as a series of decisions where $0$ means \enquote{go down}
-and $1$ means \enquote{go right and down}, each index encodes a path from the tree root to the corresponding leaf node:
+If we interpret the digits of an index ordered from most to least significant as a series of decisions where $0$ means \enquote{go up}
+and $1$ means \enquote{go right and up}, each index encodes a path from the tree root to the corresponding leaf node:
 
 \begin{figure}[H]
 \centering
@@ -21,43 +21,45 @@ and $1$ means \enquote{go right and down}, each index encodes a path from the tr
 \newcommand{\subtreeHeight}[2]{\directlua{tex.write(subtree_height(#1,#2))}}
 \newcommand{\parentIdx}[1]{\directlua{tex.write(parent(#1))}}
 \foreach \x in {0,...,\treeN} {
-	\node [anchor=north] (idx\x{}) at (\x{},0) {\x};
+	\node [anchor=south] (idx\x{}) at (\x{},0) {\x};
 	
 	\draw (\x{},0)
-		-- (\x{},\heightFactor * \subtreeHeight{\x}{\treeN}+\heightFactor)
-		-- (\parentIdx{\x},\heightFactor * \subtreeHeight{\x}{\treeN}+\heightFactor);
+		-- (\x{},-\heightFactor * \subtreeHeight{\x}{\treeN}-\heightFactor)
+		-- (\parentIdx{\x},-\heightFactor * \subtreeHeight{\x}{\treeN}-\heightFactor);
 }
 
 % Highlighted path
-\draw [very thick,red] (6,0) -- (6, 2 * \heightFactor) -- (4, 2* \heightFactor) -- (4, 3*\heightFactor) -- (0, 3*\heightFactor) -- (0,5*\heightFactor);
-\node [red] at (0-0.3, 3.5*\heightFactor) {0};
-\node [red] at (4-0.3, 2.5*\heightFactor) {1};
-\node [red] at (6-0.3, 1.5*\heightFactor) {1};
-\node [red] at (6-0.3, 0.5*\heightFactor) {0};
+\draw [very thick,red] (6,0) -- (6, -2 * \heightFactor) -- (4, -2 * \heightFactor) -- (4, -3*\heightFactor) -- (0, -3*\heightFactor) -- (0,-5*\heightFactor);
+\node [red] at (0-0.3, -3.5*\heightFactor) {0};
+\node [red] at (2, -2.5*\heightFactor) {1};
+\node [red] at (5, -1.5*\heightFactor) {1};
+\node [red] at (6-0.3, -0.5*\heightFactor) {0};
 
-\node at (10,2) {$6_{10} = 0110_2$};
+\draw [->,red] (-0.3,-\heightFactor * \subtreeHeight{0}{\treeN}-\heightFactor + 0.1) -- +(0,0.3);
+
+\node at (10,-2) {$6_{10} = 0110_2$};
 \end{tikzpicture}
 \caption{Example path for index $6$ with $N = 10$}
 \label{fig:indexTreePath}
 \end{figure}
 
-For any given $x$-coordinate ($x > 0$), the \textbf{maximum $y$-coordinate} $\max_y(x)$ is equal to the position of the first (least significant) bit set in $x$ minus 1,
-which is equal to the number of trailing zeros. We denote this expression as $\ffs (x) - 1$. The term $\ffs$ is adopted from the eponymous function
-of the C library \texttt{strings.h}.
-The path representation explains why the equality holds: the least significant bit is the last time the $x$-coordinate has changed, since all
-trailing zeros encode the decision \enquote{go down}.
+For any given $x$-coordinate ($x > 0$), the \textbf{maximum $y$-coordinate} $\max_y(x)$ is equal to the position of the first (least significant) bit set in $x$, minus 1; this corresponds to the number of trailing zeros.
+We denote this expression as $\ffs (x) - 1$.
+The term $\ffs$ stems from the eponymous function of the C library \texttt{strings.h}.
+The path representation explains why the equality holds: the least significant bit is the last time the $x$-coordinate has changed, since all trailing zeros encode the decision \enquote{go up}.
 
-The \textbf{parent node} of an inner node $(x, \max_x(y))$ is obtained by replacing the last (least-significant) \enquote{go right and down} decision
-with \enquote{go down}. Numerically, this is equivalent to cancelling the least significant bit of $x$ and can be quickly calculated with the
-expression $x \BitAnd (x - 1)$, where $\BitAnd$ is the bitwise AND-operation. Thus, we obtain the following definition of the parent function:
+To find the coordinates of the \textbf{parent node} of an inner node $(x, \max_x(y))$, we replace the last (least-significant) \enquote{go right and up} decision with \enquote{go up}. 
+Numerically, this is equivalent to cancelling the least significant bit of $x$.
+The expression $x \BitAnd (x - 1)$, where $'\BitAnd'$ is the bitwise AND-operation, is an efficient implementation of this operation.
+Thus, we obtain the following definition of the parent function:
 
 \begin{equation}
 \label{eq:parent}
 \textrm{parent} (x, \max_x (y) ) := (x \BitAnd (x - 1), y + 1)
 \end{equation}
 
-Recall from section \ref{sec:Preliminaries} that each \gls{pe} $i$ (where $i \in [0, P - 1]$) stores $n_i$ consecutive summands.
-The global index of the first summand assigned to a rank is called the start index and is equal to the prefix sums of the assigned number of summands:
+Each \gls{pe} with rank $i$ (where $i \in [0, P - 1]$) stores $n_i$ consecutive elements.
+The global index of the first element assigned to a \gls{pe} is the so-called start index, and it is equal to the prefix sums of the assigned number of summands:
 
 \begin{align}
 \textrm{startIndex} (0) &= 0 \\
@@ -106,12 +108,12 @@ $endIndex \gets startIndex + n_{\textrm{rank}}$\;
 }
 \end{algorithm}
 
-Algorithm \ref{algo:SummationAlgo} shows to complete procedure that each \gls{pe} follows. It consists of three nested loops, the most outer one
-iterates over all \gls{pe}-intersecting indices in ascending order.
-This is necessary because our summation follows the post-order tree-traversal and leftmost subtrees of a given partition are accumulated more quickly
-by their parent \gls{pe}. The next loop implements the bottom-up scheme that was discussed at the beginning of this chapter, the $y$-values are
-incremented with each iteration. Finally, the inner loop iterates over values of $x$ and sums up adjacent nodes. There is some logic necessary to avoid
-out-of-bounds memory access ($indexB \geq N$) and deal with \gls{pe}-boundaries ($rankFromIndex(indexB) \neq rank$).
+\Cref{algo:SummationAlgo} shows to complete procedure that each \gls{pe} follows.
+It consists of three nested loops.
+The most outer loop iterates over all \gls{pe}-intersecting indices in ascending order.
+The next loop implements the bottom-up scheme that was discussed at the beginning of this chapter, the $y$-values are incremented with each iteration.
+Finally, the inner loop iterates over values of $x$ and sums up adjacent nodes.
+There is some logic necessary to avoid out-of-bounds memory access ($indexB \geq N$) and deal with \gls{pe}-boundaries ($rankFromIndex(indexB) \neq rank$).
 
 \section{Applied Optimizations}
 \label{sec:AppliedOptimizations}
@@ -144,9 +146,9 @@ $t_{\textrm{MPI\_Send}}$ and $t_\textrm{add}$ are estimates of the time needed t
 floating-point values with double precision (64 bit) respectively. On the shared-memory machine \textit{i10pc138}\footnote{See Appendix for hardware specifications}, these
 estimates were empirically measured to be $t_{\textrm{MPI\_Send}} \approx 281ns$ and $t_\textrm{add} \approx 4.15ns$. While this model does not
 take any data dependencies between subtotals into account, it balances the performance gain achieved by parallelization (represented by a low maximum
-on the right side of equation \eqref{eq:distributionScore} against the communication overhead caused by binary tree fragmentation. 
+on the right side of \Cref{eq:distributionScore} against the communication overhead caused by binary tree fragmentation. 
 
-In this section we will evaluate multiple approaches to the optimization of the data distribution with an example dataset with $N = 504 850$ summands
+In this section we will evaluate multiple approaches to the optimization of the data distribution with an example dataset with $N = 504\,850$ summands
 and $p = 256$ \glspl{pe}.
 
 
@@ -187,9 +189,8 @@ The inefficient parallelization is penalized with the second term of our score f
 the even distribution.
 
 \subsubsection{Optimized-Index Distribution}
-As seen in the previous section \ref{sec:roundDownPower2Distribution}, unbounded distribution optimization yields small message counts at the expense
-of computational imbalance. In this section we will present a method to optimize the data distribution within certain bounds, to balance communication
-and computational costs.
+As seen in the previous \Cref{sec:roundDownPower2Distribution}, unbounded distribution optimization yields small message counts at the expense of computational imbalance.
+In this section we will present a method to optimize the data distribution within certain bounds, to balance communication and computational costs.
 
 First, let $I_\textrm{start}(i)$ be a function that maps a \gls{pe}-index $i$ to the index of the first summand located on that \gls{pe}:
 
@@ -204,8 +205,8 @@ Furthermore, let $\textrm{fairShare} = \tfrac{N}{p}$ be the average number of su
 \label{eq:optimizedIndexBounds}
 \forall i \in \{1, \ldots, p - 1\}: I_\textrm{start}(i) - I'_\textrm{start}(i) \leq \alpha * \textrm{fairShare}
 \end{equation}
-where $I'_\textrm{start}$ is our optimized start index and $\alpha$ is the maximum deviation relative to the even distribution. We now can iteratively
-improve our start index by applying the parent function \eqref{eq:parent} until we are about to exceed the predefined bounds:
+where $I'_\textrm{start}$ is our optimized start index and $\alpha$ is the maximum deviation relative to the even distribution.
+We now can iteratively improve our start index by applying the parent function \ref{eq:parent} until we are about to exceed the predefined bounds:
 
 \begin{algorithm}
 \caption{Index optimization procedure}\label{algo:optimizeIndex}
@@ -224,13 +225,13 @@ $proposedIndex = currentIndex$\;
 }
 \end{algorithm}
 
-After hand-tuning the parameter $\alpha = 0.0005$ with $N = 239 763$, $p = 256$ the runtimes measured over $40 000$ repetitions are plotted in figure
-\ref{fig:distribution_runtimes}. The runtime benefit is clearly visible, the optimized distribution is about $4µs$ faster than the even distribution.
+After hand-tuning the parameter $\alpha = 0.0005$ with $N = 239 763$, $p = 256$ the runtimes measured over $40 000$ repetitions are plotted in \Cref{fig:distribution_runtimes}.
+The runtime benefit is clearly visible, the optimized distribution is about $4µs$ faster than the even distribution.
 
 \begin{figure}
 \centering
 \includegraphics[scale=0.75]{figures/distribution_experiment}
-\caption{Runtime comparison of unoptimized vs. optimized data distribution}
+\caption{Runtime comparison of unoptimized vs.\ optimized data distribution}
 \label{fig:distribution_runtimes}
 \end{figure}
 
