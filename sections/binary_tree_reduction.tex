@@ -59,7 +59,7 @@ By iteratively connecting adjacent nodes, we produce inner nodes that represent 
 After $\numLevels$ levels, the reduction of all elements into a single root node is complete.
 \Cref{fig:reductionExample} demonstrates this reduction scheme.
 In the first level, we construct an inner node that represents the reduction of the numbers $3$ and $2$.
-Since $7$ has no adjacent element, the next inner node has only one child node and propagates its value along the tree unchanged.
+Since $7$ has no adjacent element, the next inner node has only one child node and propagates the value along the tree unchanged.
 In the second and final layer, the root node represents the reduction of the two remaining elements $3 \reduce 2$ and $7$, producing the final result $(3 \reduce 2) \reduce 7$.
 
 We can uniquely identify nodes by using two-dimensional \textbf{coordinates} $(x, y)$.
@@ -99,7 +99,7 @@ Our task is to reduce $N$ elements over $p$ \glspl{pe}.
 We can split up our binary tree across multiple \glspl{pe} by distributing the elements.
 A node with coordinates $(x,y)$ belongs to the \gls{pe} which holds the element with index $x$.
 
-\Cref{fig:distributed_binary_tree} shows the distribution of nine elements are across three \glspl{pe}.
+\Cref{fig:distributed_binary_tree} shows the distribution of nine elements across three \glspl{pe}.
 \begin{figure}[H]
 \centering
 \begin{tikzpicture}
@@ -139,8 +139,8 @@ A node with coordinates $(x,y)$ belongs to the \gls{pe} which holds the element 
 \end{figure}
 
 Reductions $(0) \reduce (1)$, $(4) \reduce (5)$ and $(6) \reduce (7)$ offer themselves for parallel execution, since there exist no data dependencies between them.
-Some calculations do require communication between the \glspl{pe}.
-A node is \gls{pe}-intersecting if its child nodes belong to distinct \glspl{pe}.
+Some calculations do require communication between the \glspl{pe}:
+a node is \gls{pe}-intersecting if its child nodes belong to distinct \glspl{pe}.
 In our example in \Cref{fig:distributed_binary_tree}, the nodes with coordinates $(2,1)$ and $(4,2)$ labeled A and B, respectively, are examples of \gls{pe}-intersecting nodes.
 
 \section{Message counts}
@@ -187,7 +187,7 @@ If we substitute $i$ in the above equation, we get the following closed-form upp
 \label{eq:upperBoundLowerDistribution}
 M(N) = (p - 1) * (\log_2 \Big( \frac{N - 1}{p} \Big) + 1)
 \end{equation}
-Under the assumption that the number of \glspl{pe} is constant, the message count $M$ therefore is in $O(\log(N))$.
 \Cref{fig:messageCount256Lower} displays \Cref{eq:upperBoundLowerDistribution} in orange color.
+Under the assumption that the number of \glspl{pe} is constant, the message count $M$ therefore is in $O(\log(N))$.
 Note that for the $n_i^\textrm{upper}$ distribution in \Cref{fig:messageCount256Upper}, the corresponding spikes are much less pronounced since the subtree shifting described above does not occur when adding only one element.
 Because of the lower upper bound, implementations should therefore prefer the $n_i^\textrm{upper}$ distribution to the $n_i^\textrm{lower}$ distribution
