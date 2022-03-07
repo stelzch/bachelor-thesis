@@ -32,6 +32,12 @@
 \centering
 \begin{tikzpicture}
 % coordinate system
+
+
+\coordinate (origin) at (-2,-1);
+
+\draw[->] (origin) -- +(0.6,0) node [above,midway] {$x$};
+\draw[->] (origin) -- +(0,-0.6) node [left,midway] {$y$};
 \node (A) at (0,-2) {(0,2)};
 \node (B) at (0,-1) {(0,1)};
 \node (C) at (0,-0) {(0,0)};
