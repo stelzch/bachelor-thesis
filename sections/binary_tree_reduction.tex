@@ -64,7 +64,7 @@ In the second and final layer, the root node represents the reduction of the two
 
 We can uniquely identify nodes by using two-dimensional \textbf{coordinates} $(x, y)$.
 The leaf nodes have the coordinates $(0,0)$ through $(N-1,0)$.
-For the coordinates of inner nodes, we simply take over the $x$-coordinate of their left child node and increment the $y$-coordinate by $1$.
+To obtain the coordinates of inner nodes, we simply take over the $x$-coordinate of their left child node and increment the $y$-coordinate by $1$.
 \Cref{fig:coordinateExample} shows coordinates for all nodes in a binary tree with $N = 3$ leaf nodes.
 An element has index $i$ if its corresponding leaf node has the coordinates $(i,0)$.
 
@@ -79,7 +79,7 @@ By differentiating three cases, we define a recursive reduction function that ad
 
 Equation \eqref{eq:nodeReduceBaseCase} defines the base case for leaf nodes, where no further reductions are necessary.
 If $N$ is not a power of $2$, there will not always be an adjacent element, as the above example from \Cref{fig:reductionExample} has demonstrated.
-In this case, the inner node has only one child node whose value we can directly return, a fact which equation \eqref{eq:nodeReducePassthrough} covers.
+In this case, the inner node has only one child node whose value we can directly return, a fact which Equation \eqref{eq:nodeReducePassthrough} covers.
 Finally, Equation \eqref{eq:nodeReduceReduction} defines the recursive reduction strategy for inner nodes with two child nodes.
 
 We can now express the entire reduction by applying the $\reduceFunc$-function to the root node $(0, \lceil \log_2 N \rceil)$.
@@ -98,8 +98,8 @@ The benefits become visible only if we incorporate \gls{pe}-boundaries into our 
 Our task is to reduce $N$ elements over $p$ \glspl{pe}.
 We can split up our binary tree across multiple \glspl{pe} by distributing the elements.
 A node with coordinates $(x,y)$ belongs to the \gls{pe} which holds the element with index $x$.
-
 \Cref{fig:distributed_binary_tree} shows the distribution of nine elements across three \glspl{pe}.
+
 \begin{figure}[H]
 \centering
 \begin{tikzpicture}
@@ -141,7 +141,7 @@ A node with coordinates $(x,y)$ belongs to the \gls{pe} which holds the element 
 Reductions $(0) \reduce (1)$, $(4) \reduce (5)$ and $(6) \reduce (7)$ offer themselves for parallel execution, since there exist no data dependencies between them.
 Some calculations do require communication between the \glspl{pe}:
 a node is \gls{pe}-intersecting if its child nodes belong to distinct \glspl{pe}.
-In our example in \Cref{fig:distributed_binary_tree}, the nodes with coordinates $(2,1)$ and $(4,2)$ labeled A and B, respectively, are examples of \gls{pe}-intersecting nodes.
+In \Cref{fig:distributed_binary_tree}, node A with coordinates $(2,1)$ and node B with coordinates $(4,2)$ are examples of \gls{pe}-intersecting nodes.
 
 \section{Message counts}
 The main hinderance to efficient parallelization as outlined in the previous section is the need for synchronization between \glspl{pe} because of data dependencies in the form of \gls{pe}-intersecting nodes.
@@ -172,9 +172,14 @@ The functions display large differences in message counts for small differences 
 The lower bound of the message count is $p - 1$, since all \glspl{pe} with a rank larger than $0$ must have at least one node that has a \gls{pe}-intersecting parent node.
 For the $n_i^\textrm{lower}$-distribution, the message count attains the global minima at $N = 2^i * p$, where $i \in \mathbb{N}$.
 In this case, each \gls{pe} holds an independent subtree of size $2^i$ whose root node is part of a \gls{pe}-intersecting node.
-If we increase our dataset size to $N+1$, applying the $n_i^\textrm{lower}$ distribution will shift all \gls{pe}-boundaries one step to the right because of the additional element on the root \gls{pe}.
-The subtree root nodes are now on a different \glspl{pe} than their children, producing $i + 1$ \gls{pe}-intersecting nodes on all \glspl{pe} except the first one.
-Therefore, the message count for $N = 2^i * p + 1$ is $(p - 1) * (i + 1)$.
+If we increase our dataset size to $N+1$, applying the $n_i^\textrm{lower}$ distribution will shift all \gls{pe}-boundaries one step in $x$-direction because of the additional element on the root \gls{pe}.
+The subtree root nodes are now on different \glspl{pe} than their children, producing $i + 1$ \gls{pe}-intersecting nodes on all \glspl{pe} except the first one.
+Therefore, the message count for $N = 2^i * p + 1$ is 
+\begin{equation}
+\label{eq:messageCountI}
+(p - 1) * (i + 1)
+\end{equation}
+
 Furthermore,
 \begin{align*}
 &N = 2^i * p + 1 \\ 
@@ -182,12 +187,12 @@ Furthermore,
 &\Leftrightarrow \frac{N - 1}{p} = 2^i \\
 &\Leftrightarrow i = \log_2 \big(\frac{N - 1}{p}\big)
 \end{align*}
-If we substitute $i$ in the above equation, we get the following closed-form upper bound on the message count for the $n_i^\textrm{lower}$ distribution:
+If we substitute $i$ in \Cref{eq:messageCountI}, we get the following closed-form upper bound on the message count for the $n_i^\textrm{lower}$ distribution:
 \begin{equation}
 \label{eq:upperBoundLowerDistribution}
 M(N) = (p - 1) * (\log_2 \Big( \frac{N - 1}{p} \Big) + 1)
 \end{equation}
-\Cref{fig:messageCount256Lower} displays \Cref{eq:upperBoundLowerDistribution} in orange color.
+\Cref{fig:messageCount256Lower} displays a plot of  \Cref{eq:upperBoundLowerDistribution} in orange color.
 Under the assumption that the number of \glspl{pe} is constant, the message count $M$ therefore is in $O(\log(N))$.
 Note that for the $n_i^\textrm{upper}$ distribution in \Cref{fig:messageCount256Upper}, the corresponding spikes are much less pronounced since the subtree shifting described above does not occur when adding only one element.
-Because of the lower upper bound, implementations should therefore prefer the $n_i^\textrm{upper}$ distribution to the $n_i^\textrm{lower}$ distribution
+Because of the lower upper bound, implementations should therefore prefer the $n_i^\textrm{upper}$ distribution over the $n_i^\textrm{lower}$ distribution
