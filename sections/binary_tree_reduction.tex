@@ -147,7 +147,9 @@ A node with coordinates $(x,y)$ belongs to the \gls{pe} which holds the element 
 Reductions $(0) \reduce (1)$, $(4) \reduce (5)$ and $(6) \reduce (7)$ offer themselves for parallel execution, since there exist no data dependencies between them.
 Some calculations do require communication between the \glspl{pe}:
 a node is \gls{pe}-intersecting if its child nodes belong to distinct \glspl{pe}.
+We define an outbound subtree root as the right child node of a \gls{pe}-intersecting node, since the computation process must send its result over the \gls{mpi}.
 In \Cref{fig:distributed_binary_tree}, node A with coordinates $(2,1)$ and node B with coordinates $(4,2)$ are examples of \gls{pe}-intersecting nodes.
+In this case, nodes $(3,0)$ and $(6,1)$ are outbound subtree roots.
 
 \section{Message counts}
 The main hinderance to efficient parallelization as outlined in the previous section is the need for synchronization between \glspl{pe} because of data dependencies in the form of \gls{pe}-intersecting nodes.

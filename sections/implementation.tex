@@ -4,14 +4,13 @@
 In this chapter, we deduce the necessary equations to implement the reduction algorithm.
 We focus on summation, our reduction operator $\reduce$ is the simple floating-point addition.
 While the recursive formula given in \Cref{eq:nodeReduceReduction} already defines a reduction algorithm, its implementation in imperative languages would heavily rely on the call stack to store subtotals.
-In practice, performing the calculations in opposite direction, bottom-up instead of than top-down, yields better runtimes.
+In practice, performing the calculations in opposite direction, from leaf nodes to the root, yields better runtimes.
 
-The bionary representation of element indices has $\numLevels$ digits, since
+The binary representation of element indices has $\numLevels$ bits, since
 \begin{equation}
 2^{\numLevels} \geq 2^{\log_2 N} = N
 \end{equation}
-If we interpret the digits of an index ordered from most to least significant as a series of decisions where $0$ means \enquote{go up}
-and $1$ means \enquote{go right and up}, each index encodes a path from the tree root to the corresponding leaf node:
+If we interpret the bits of an index ordered from most- to least-significant as a series of decisions, where $0$ means \enquote{go up} and $1$ means \enquote{go right and up}, each index encodes a path from the tree root to the corresponding leaf node:
 
 \begin{figure}[H]
 \centering
@@ -43,10 +42,10 @@ and $1$ means \enquote{go right and up}, each index encodes a path from the tree
 \label{fig:indexTreePath}
 \end{figure}
 
-For any given $x$-coordinate ($x > 0$), the \textbf{maximum $y$-coordinate} $\max_y(x)$ is equal to the position of the first (least significant) bit set in $x$, minus 1; this corresponds to the number of trailing zeros.
+For any given $x$-coordinate $x > 0$, the \textbf{maximum $y$-coordinate} $\max_y(x)$ is equal to number of trailing zeros of $x$, i.e.\ the zero-indexed position of the least-significant bit set in $x$.
 We denote this expression as $\ffs (x) - 1$.
 The term $\ffs$ stems from the eponymous function of the C library \texttt{strings.h}.
-The path representation explains why the equality holds: the least significant bit is the last time the $x$-coordinate has changed, since all trailing zeros encode the decision \enquote{go up}.
+The path representation explains why the equality holds: the least-significant bit set is the last time the $x$-coordinate changes along the path from the root, since all following bits are zero and encode the decision \enquote{go up}.
 
 To find the coordinates of the \textbf{parent node} of an inner node $(x, \max_x(y))$, we replace the last (least-significant) \enquote{go right and up} decision with \enquote{go up}. 
 Numerically, this is equivalent to cancelling the least significant bit of $x$.
@@ -59,7 +58,7 @@ Thus, we obtain the following definition of the parent function:
 \end{equation}
 
 Each \gls{pe} with rank $i$ (where $i \in [0, P - 1]$) stores $n_i$ consecutive elements.
-The global index of the first element assigned to a \gls{pe} is the so-called start index, and it is equal to the prefix sums of the assigned number of summands:
+The global index of the first element assigned to a \gls{pe} is the so-called start index, and it is equal to the prefix sum of the assigned number of summands:
 
 \begin{align}
 \textrm{startIndex} (0) &= 0 \\
@@ -67,7 +66,7 @@ The global index of the first element assigned to a \gls{pe} is the so-called st
 \label{eq:startIndex}
 \end{align}
 
-This allows us to define the function rankFromIndex, which computes the index of a \gls{pe} that stores a given summand:
+This allows us to define the function rankFromIndex, which computes the index of the \gls{pe} that stores a given summand:
 \begin{equation}
 \textrm{rankFromIndex} (x) = \max \{i \in [0, P - 1] \;|\; \textrm{startIndex} (i) \leq x \}
 \end{equation}
@@ -81,56 +80,101 @@ The definition of the set of \gls{pe}-intersecting summand indices also depends 
 
 \begin{algorithm}
 \caption{Summation procedure}\label{algo:SummationAlgo}
+\KwData{\gls{pe}-rank $rank$, $n_{rank}$ summands}
+\KwResult{Reduction result on the \gls{pe} with rank $0$}
 \DontPrintSemicolon
 \SetAlgoLined
 $startIndex \gets startIndices (rank)$\;
 $endIndex \gets startIndex + n_{\textrm{rank}}$\;
 \For{$i \gets \rankIntersectingIndices ([\textrm{startIndex}, \textrm{endIndex}]) $}{
-	\For{$y \gets [1, \max_x(y)]$}{
+	\For{$y \gets [1, \max_x(y)]$}{\label{algo:SummationAlgoTopDownFor}
 		$x \gets startIndex$\;
-		\While{$x < endIndex$}{
+		\While{$x < endIndex$}{\label{algo:SummationAlgoInnerLoop}
 			$a \gets (x, y - 1)$\;
 			$indexB \gets x + 2^{y - 1}$\;
 			\uIf{$indexB \geq N$} {
-				$(x,y) \gets a$\;
+				$(x,y) \gets a$\;\label{algo:SummationAlgoPassthrough}
 			}
 			\uElseIf{$\textrm{rankFromIndex}(indexB) \neq rank$}{
-				$b \gets \textrm{fetch}\ indexB$\;
+				$b \gets \textrm{receive}\ (indexB, \max_y(indexB))$\;\label{algo:SummationAlgoRankIntersectingNode}
 				$(x,y) \gets a + b$\;
 			}
 			\Else{
-				$b \gets (indexB, y-1)$\;
+				$b \gets (indexB, y-1)$\; \label{algo:SummationAlgoInnerNode}
 				$(x,y) \gets a + b$\;
 			}
 			$x \gets x + 2^{y - 1}$\;
 		}
 	}
+	$\textrm{send } (i, \max_y(i))$\;
 }
 \end{algorithm}
 
-\Cref{algo:SummationAlgo} shows to complete procedure that each \gls{pe} follows.
+\Cref{algo:SummationAlgo} shows to procedure that each \gls{pe} follows.
 It consists of three nested loops.
-The most outer loop iterates over all \gls{pe}-intersecting indices in ascending order.
-The next loop implements the bottom-up scheme that was discussed at the beginning of this chapter, the $y$-values are incremented with each iteration.
-Finally, the inner loop iterates over values of $x$ and sums up adjacent nodes.
-There is some logic necessary to avoid out-of-bounds memory access ($indexB \geq N$) and deal with \gls{pe}-boundaries ($rankFromIndex(indexB) \neq rank$).
+The most outer loop iterates over all \gls{pe}-intersecting indices in ascending order; its body is responsible for the reduction of the subtree rooted at the corresponding \gls{pe}-intersecting node.
+Because our reduction scheme is a left-leaning binary tree, nodes with lower indices occur earlier in the reduction equation, therefore processing \gls{pe}-intersecting indices in ascending order minimizes wait-times for other \glspl{pe}.
+
+
+The inner loops in \Cref{algo:SummationAlgoTopDownFor} and \Cref{algo:SummationAlgoInnerLoop} implement the top-down scheme that reduces adjacent nodes level-by-level.
+The distinctions made in Equations \eqref{eq:nodeReduceBaseCase}--\eqref{eq:nodeReduceReduction} give rise to a series of conditional expressions: \Cref{algo:SummationAlgoPassthrough} deals with inner nodes that have no adjacent node, \Cref{algo:SummationAlgoRankIntersectingNode} distinguishes between \gls{pe}-intersecting nodes and local inner nodes and \Cref{algo:SummationAlgoInnerNode} performs the local reduction of adjacent elements.
 
 \section{Applied Optimizations}
 \label{sec:AppliedOptimizations}
 
+While the implementation used in \Cref{ch:Experiments} follows \Cref{algo:SummationAlgo} in principle, it includes multiple optimizations concerning both the calculation and the communication of results.
+Message Buffering (\Cref{sec:MessageBuffering}) allows to reduce the number of messages sent across the cluster and therefore reduces communication times.
+The number of messages further decreases if the program is in control over the data distribution (\Cref{sec:DataDistribution}).
+Vectorizing the additions (\Cref{sec:Vectorization}) yielded the largest performance gain of all optimizations presented in this section.
+
 \subsection{Message Buffering}
 \label{sec:MessageBuffering}
 
-Depending on the distribution of summands, the first few \gls{pe}-intersecting nodes may have the same parent \gls{pe}. In these cases, the communication
-overhead outweighs the actual computational effort of summation and bundling messages results in performance gains. The current implementation
-utilizes a buffer with a maximum of $4$ summands per message. After the summation routine has computed a \gls{pe}-intersecting subtotal, it is placed
-in a outbound message buffer. Flushing of the buffer occurs in either one of the following cases: \begin{itemize}
-\item The summation routine inserts another \gls{pe}-intersecting summand into the buffer which has a different target \gls{pe}
-\item The summation routine begins work on a subtotal whose subtree size is greater than $64$ summands
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\newcommand{\heightFactor}{0.7}
+\newcommand{\treeN}{5}
+\newcommand{\subtreeHeight}[2]{\directlua{tex.write(subtree_height(#1,#2))}}
+\newcommand{\parentIdx}[1]{\directlua{tex.write(parent(#1))}}
+\foreach \x in {0,...,\treeN} {
+	\node [anchor=south] (idx\x{}) at (\x{},0) {\x};
+	
+	\draw (\x{},0)
+		-- (\x{},-\heightFactor * \subtreeHeight{\x}{\treeN}-\heightFactor)
+		-- (\parentIdx{\x},-\heightFactor * \subtreeHeight{\x}{\treeN}-\heightFactor);
+}
+
+\draw [very thick, dashed, rounded corners, teal] (-0.5,0.5)  rectangle (2.4,-2.5);
+\draw [very thick, dashed, rounded corners, olive]  (2.6, 0.5) rectangle (5.4,-2.5);
+\node (PE0) at (1,1) {\gls{pe} 0};
+\node (PE1) at (4,1) {\gls{pe} 1};
+
+%\draw (2,-1 * \heightFactor) node [anchor=east] {\footnotesize A};
+\fill[fill=red] (2,-1 * \heightFactor) circle [radius=2pt];
+
+%\draw (0,-3 * \heightFactor) node [anchor=south west] {\footnotesize B};
+\fill[fill=red] (0,-3 * \heightFactor) circle [radius=2pt];
+
+\end{tikzpicture}
+\caption{Distributed tree with $N=6$ nodes and $p=2$ \glspl{pe}}
+\label{fig:messageBufferingTree}
+\end{figure}
+
+Typically, outbound subtree roots with the lowest indices located on the same \gls{pe} have the same destination rank.
+\Cref{fig:messageBufferingTree} is a minimal example for this observation: nodes $(3,0)$ and $(4,1)$ are outbound subtree roots that \gls{pe} 1 sends to \gls{pe} 0.
+\gls{pe} 1 can avoid the additional message latency if it does not send $(3,0)$ directly, but stores it in a buffer instead.
+Then, after finishing the computation of $(4,1)$, \gls{pe} 1 can send both results to \gls{pe} 0 in a single message.
+Because \gls{pe} 0 at first calculates $(0,1)$, the delayed transmission of $(3,0)$ does not impact the runtime negatively.
+
+The current implementation utilizes a buffer with a maximum of $4$ elements per message.
+After the summation routine has computed an outbound subtree root, it places the result in the outbound message buffer.
+Flushing of the buffer occurs in either one of the following cases: \begin{itemize} 
+\item The summation routine inserts another outbound subtree root into the buffer which has a different target \gls{pe}.
+\item The summation routine begins work on a outbound subtree root whose subtree size is greater than $64$ summands. This guarantees an upper limit on the time a finished result spends inside the buffer.
 \end{itemize}
 
-The buffer utilization averages about $1.2$ summands per message, further tests have shown that relaxing above flushing criteria does not
-yield a runtime benefit, presumably because of the induced latency.
+The buffer utilization averages about $1.2$ summands per message, further tests have shown that relaxing above flushing criteria does not yield a runtime benefit, presumably because of the induced latency.
 
 \subsection{Data Distribution}
 \label{sec:DataDistribution}

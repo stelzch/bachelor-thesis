@@ -10,6 +10,9 @@
 %%
 %% Version 1.3.5, 2020-06-26
 
+\chapter{Acknowledgements}
+The author acknowledges support by the state of Baden-Württemberg through bwHPC.
+
 \chapter{Glossary}
 \printglossary[type=\acronymtype]
 \printglossary
@@ -19,7 +22,33 @@
 {\chapter{Anhang}}      % german style
 \label{chap:appendix}
 
+\section{Detailed Benchmark Results}
 
+\newcommand{\mScale}{0.7}
+\begin{figure}\centering
+\includegraphics[scale=\mScale]{figures/violin354.pdf}
+\includegraphics[scale=\mScale]{figures/violinMulti100.pdf}
+
+\end{figure}
+\begin{figure}\centering\ContinuedFloat
+\includegraphics[scale=\mScale]{figures/violinPrim.pdf}
+\includegraphics[scale=\mScale]{figures/violinFusob.pdf}
+\includegraphics[scale=\mScale]{figures/violinRokasD1.pdf}
+
+\end{figure}
+\begin{figure}\centering\ContinuedFloat
+\includegraphics[scale=\mScale]{figures/violinRokasA4.pdf}
+\includegraphics[scale=\mScale]{figures/violinRokasD7.pdf}
+\includegraphics[scale=\mScale]{figures/violinRokasD4.pdf}
+
+\end{figure}
+\begin{figure}\centering\ContinuedFloat
+\includegraphics[scale=\mScale]{figures/violinPeteD8.pdf}
+\includegraphics[scale=\mScale]{figures/violinRokasA8.pdf}
+
+\caption{Runtime distribution for all datasets with $p=256$ \glspl{pe}}
+
+\end{figure}
 
 %% -------------------
 %% | Example content |

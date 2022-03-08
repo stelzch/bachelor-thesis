@@ -5,7 +5,7 @@ end
 
 function subtree_height (i,n)
     if i == 0 then
-        return math.ceil(log2(n)+1)
+        return math.floor(log2(n)+1)
     else
         return math.floor(log2((i | (i - 1)) + 1 - i))
     end

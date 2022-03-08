@@ -24,7 +24,6 @@ def fetch_durations(run_id, datasetQuery='%'):
     runs = cur.execute(f"SELECT id, mode, n_summands, datafile, ranks FROM results" \
                     " WHERE run_id = ? AND datafile LIKE ? ORDER BY n_summands, datafile, mode", (run_id,datasetQuery))
     prev_datafile = None
-    
     for result_id, mode, n_summands, datafile, ranks in runs.fetchall():
         if mode == "baseline":
             continue
@@ -199,9 +198,8 @@ def last_complete_benchmark(p=256):
 last_complete = 69 # last_complete_benchmark()
 print(f"Utilizing results from run {last_complete}")
 scatter_plot(last_complete).savefig("figures/benchmarkScatter.pdf")
-violin_plot(last_complete, '%354%').savefig("figures/violin354.pdf")
-violin_plot(last_complete, '%rokasD4%').savefig("figures/violinRokasD4.pdf")
-violin_plot(last_complete, '%rokasD7%').savefig("figures/violinRokasD7.pdf")
+for dataset in ["354", "rokasA4", "rokasA8", "PeteD8", "rokasD1", "rokasD4", "rokasD7", "fusob", "multi100", "prim"]:
+    violin_plot(last_complete, f"%{dataset}%").savefig(f"figures/violin{dataset.capitalize()}.pdf")
 slowdown_plot(last_complete).savefig("figures/slowdownPlot.pdf")
 
 # In[ ]:
