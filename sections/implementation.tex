@@ -47,14 +47,14 @@ We denote this expression as $\ffs (x) - 1$.
 The term $\ffs$ stems from the eponymous function of the C library \texttt{strings.h}.
 The path representation explains why the equality holds: the least-significant bit set is the last time the $x$-coordinate changes along the path from the root, since all following bits are zero and encode the decision \enquote{go up}.
 
-To find the coordinates of the \textbf{parent node} of an inner node $(x, \max_x(y))$, we replace the last (least-significant) \enquote{go right and up} decision with \enquote{go up}. 
+To find the coordinates of the \textbf{parent node} of an inner node $(x, \max_y(x))$, we replace the last (least-significant) \enquote{go right and up} decision with \enquote{go up}. 
 Numerically, this is equivalent to cancelling the least significant bit of $x$.
 The expression $x \BitAnd (x - 1)$, where $'\BitAnd'$ is the bitwise AND-operation, is an efficient implementation of this operation.
 Thus, we obtain the following definition of the parent function:
 
 \begin{equation}
 \label{eq:parent}
-\textrm{parent} (x, \max_x (y) ) := (x \BitAnd (x - 1), y + 1)
+\textrm{parent} (x, \max_y (x) ) := (x \BitAnd (x - 1), y + 1)
 \end{equation}
 
 Each \gls{pe} with rank $i$ (where $i \in [0, P - 1]$) stores $n_i$ consecutive elements.
@@ -87,7 +87,7 @@ The definition of the set of \gls{pe}-intersecting summand indices also depends 
 $startIndex \gets startIndices (rank)$\;
 $endIndex \gets startIndex + n_{\textrm{rank}}$\;
 \For{$i \gets \rankIntersectingIndices ([\textrm{startIndex}, \textrm{endIndex}]) $}{
-	\For{$y \gets [1, \max_x(y)]$}{\label{algo:SummationAlgoTopDownFor}
+	\For{$y \gets [1, \max_y(x)]$}{\label{algo:SummationAlgoTopDownFor}
 		$x \gets startIndex$\;
 		\While{$x < endIndex$}{\label{algo:SummationAlgoInnerLoop}
 			$a \gets (x, y - 1)$\;
