@@ -181,7 +181,7 @@ The lower bound of the message count is $p - 1$, since all \glspl{pe} with a ran
 For the $n_i^\textrm{lower}$-distribution, the message count attains the global minima at $N = 2^i * p$, where $i \in \mathbb{N}$.
 In this case, each \gls{pe} holds an independent subtree of size $2^i$ whose root node is part of a \gls{pe}-intersecting node.
 If we increase our dataset size to $N+1$, applying the $n_i^\textrm{lower}$ distribution will shift all \gls{pe}-boundaries one step in $x$-direction because of the additional element on the root \gls{pe}.
-The subtree root nodes are now on different \glspl{pe} than their children, producing $i + 1$ \gls{pe}-intersecting nodes on all \glspl{pe} except the first one.
+The subtree root nodes are now on different \glspl{pe} than their children, producing $i + 1$ \gls{pe}-intersecting nodes on all \glspl{pe} except the first one, as illustrated in \Cref{fig:messageCountShifting}.
 Therefore, the message count for $N = 2^i * p + 1$ is 
 \begin{equation}
 \label{eq:messageCountI}

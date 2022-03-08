@@ -50,6 +50,71 @@ The author acknowledges support by the state of Baden-Württemberg through bwHPC
 
 \end{figure}
 
+\begin{figure}[H]
+\centering
+% N = 16, p = 4
+\begin{subfigure}{1.0\textwidth}
+\begin{tikzpicture}
+\newcommand{\heightFactor}{0.7}
+\newcommand{\treeN}{15}
+\newcommand{\subtreeHeight}[2]{\directlua{tex.write(subtree_height(#1,#2))}}
+\newcommand{\parentIdx}[1]{\directlua{tex.write(parent(#1))}}
+\foreach \x in {0,1,...,\treeN} {
+	\node [anchor=south] (idx\x) at (\x,0) {\x};
+
+	
+	\draw (\x,0)
+		-- (\x,-\heightFactor * \subtreeHeight{\x}{\treeN}-\heightFactor)
+		-- (\parentIdx{\x},-\heightFactor * \subtreeHeight{\x}{\treeN}-\heightFactor);
+}
+
+\draw [very thick, dashed, rounded corners, teal] (-0.5,0.5)  rectangle (3.4,-4.5 * \heightFactor);
+\draw [very thick, dashed, rounded corners, olive]  (3.6, 0.5) rectangle (7.4,-3.5 * \heightFactor);
+\draw [very thick, dashed, rounded corners, teal]  (7.6, 0.5) rectangle (11.4,-4.5 * \heightFactor);
+\draw [very thick, dashed, rounded corners, olive]  (11.6, 0.5) rectangle (15.4,-3.5 * \heightFactor);
+
+\foreach \x in {0,1,2,3}
+\node (PE\x) at (1.5+4*\x,1) {\gls{pe} \x};
+\end{tikzpicture}
+
+\caption{Optimal distribution of $N=2^2*p$ elements over $p=4$ \glspl{pe}}
+\label{fig:messageCountShiftingOptimal}
+\end{subfigure}
+
+% N = 17, p = 4
+\begin{subfigure}{1.0\textwidth}
+\begin{tikzpicture}
+\newcommand{\heightFactor}{0.7}
+\newcommand{\treeN}{16}
+\newcommand{\subtreeHeight}[2]{\directlua{tex.write(subtree_height(#1,#2))}}
+\newcommand{\parentIdx}[1]{\directlua{tex.write(parent(#1))}}
+\foreach \x in {0,1,...,\treeN} {
+	\node [anchor=south] (idx\x) at (\x,0) {\x};
+
+	
+	\draw (\x,0)
+		-- (\x,-\heightFactor * \subtreeHeight{\x}{\treeN}-\heightFactor)
+		-- (\parentIdx{\x},-\heightFactor * \subtreeHeight{\x}{\treeN}-\heightFactor);
+}
+
+\draw [very thick, dashed, rounded corners, teal] (-0.5,0.5)  rectangle (4.4,-5.5 * \heightFactor);
+\draw [very thick, dashed, rounded corners, olive]  (4.6, 0.5) rectangle (8.4,-4.5 * \heightFactor);
+\draw [very thick, dashed, rounded corners, teal]  (8.6, 0.5) rectangle (12.4,-3.5 * \heightFactor);
+\draw [very thick, dashed, rounded corners, olive]  (12.6, 0.5) rectangle (16.4,-5.5 * \heightFactor);
+
+\node (PE0) at (2,1) {\gls{pe} 0};
+
+\foreach \x in {1,2,3}
+\node (PE\x) at (2.5+4*\x,1) {\gls{pe} \x};
+\end{tikzpicture}
+\caption{Worst-case distribution of $N=2^2*p+1$ elements over $p=4$ \glspl{pe}}
+\label{fig:messageCountShiftingWorstCase}
+\end{subfigure}
+
+\caption{Illustration of the shifting behaviour in the $n_i^\textrm{lower}$-distribution that produces maximal message counts}
+\label{fig:messageCountShifting}
+\end{figure}
+
 %% -------------------
 %% | Example content |
 %% -------------------
