@@ -1,7 +1,7 @@
 all: thesis.pdf
 
 clean:
-	rm -f thesis.pdf
+	latexmk -CA thesis
 
 thesis.pdf: *.tex sections/*.tex
 	latexmk -pdflua thesis.tex

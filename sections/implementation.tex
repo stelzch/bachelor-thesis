@@ -158,7 +158,7 @@ Vectorizing the additions (\Cref{sec:Vectorization}) yielded the largest perform
 \label{fig:messageBufferingTree}
 \end{figure}
 
-Typically, outbound subtree roots with the lowest indices located on the same \gls{pe} have the same destination rank.
+Typically, low-index outbound subtree roots located on the same \gls{pe} have the same destination rank.
 \Cref{fig:messageBufferingTree} is a minimal example for this observation: nodes $(3,0)$ and $(4,1)$ are outbound subtree roots that \gls{pe} 1 sends to \gls{pe} 0.
 \gls{pe} 1 can avoid the additional message latency if it does not send $(3,0)$ directly, but stores it in a buffer instead.
 Then, after finishing the computation of $(4,1)$, \gls{pe} 1 can send both results to \gls{pe} 0 in a single message.
@@ -167,8 +167,8 @@ Because \gls{pe} 0 at first calculates $(0,1)$, the delayed transmission of $(3,
 The current implementation utilizes a buffer with a maximum of $4$ elements per message.
 After the summation routine has computed an outbound subtree root, it places the result in the outbound message buffer.
 Flushing of the buffer occurs in either one of the following cases: \begin{itemize} 
-\item The summation routine inserts another outbound subtree root into the buffer which has a different target \gls{pe}.
-\item The summation routine begins work on a outbound subtree root whose subtree size is greater than $64$ summands. This guarantees an upper limit on the time a finished result spends inside the buffer.
+\item The summation procedure inserts another outbound subtree root into the buffer which has a different target \gls{pe}.
+\item The summation procedure begins work on a outbound subtree root whose subtree size is greater than $64$ summands. This guarantees an upper limit on the time a finished result spends inside the buffer.
 \end{itemize}
 
 The buffer utilization averages about $1.2$ summands per message, further tests have shown that relaxing above flushing criteria does not yield a runtime benefit, presumably because of the induced latency.
@@ -176,37 +176,53 @@ The buffer utilization averages about $1.2$ summands per message, further tests 
 \subsection{Data Distribution}
 \label{sec:DataDistribution}
 
-If the user is in control of the summand distribution, multiple optimization techniques arise. To quantify them, we propose the following model:
+If the user can arbitrarily assign elements to \glspl{pe}, multiple optimization techniques arise. To quantify them, we propose the following model:
 
 \begin{equation}
 \label{eq:distributionScore}
-\textrm{Score} = t_{\textrm{MPI\_Send}} * n_{\textrm{\gls{pe} Intersecting Numbers}} + \max \{ i \in [0, p - 1]\, |\, n_i * t_{\textrm{add}} \}
+\textrm{Score} = t_{\textrm{MPI\_Send}} * n_{\textrm{\gls{pe}-intersecting nodes}} + \max \{ i \in [0, p - 1]\, |\, n_i * t_{\textrm{add}} \}
 \end{equation}
 
-$t_{\textrm{MPI\_Send}}$ and $t_\textrm{add}$ are estimates of the time needed to send a single summand between two \glspl{pe} and addition of two
-floating-point values with double precision (64 bit) respectively. On the shared-memory machine \textit{i10pc138}\footnote{See Appendix for hardware specifications}, these
-estimates were empirically measured to be $t_{\textrm{MPI\_Send}} \approx 281ns$ and $t_\textrm{add} \approx 4.15ns$. While this model does not
-take any data dependencies between subtotals into account, it balances the performance gain achieved by parallelization (represented by a low maximum
-on the right side of \Cref{eq:distributionScore} against the communication overhead caused by binary tree fragmentation. 
+$t_{\textrm{MPI\_Send}}$ is an estimate of the time needed to send a single element between two \glspl{pe}, $t_\textrm{add}$ estimates the time needed to add two floating-point values with double precision (64 bit).
+On the shared-memory machine \textit{i10pc138}, these estimates were empirically measured to be $t_{\textrm{MPI\_Send}} \approx 281ns$ and $t_\textrm{add} \approx 4.15ns$.
+While this model does not take any data dependencies between subtotals into account, it balances the performance gain achieved by parallelization (represented by a low maximum on the right side of \Cref{eq:distributionScore}) against the communication overhead caused by binary tree fragmentation. 
 
-In this section we will evaluate multiple approaches to the optimization of the data distribution with an example dataset with $N = 504\,850$ summands
-and $p = 256$ \glspl{pe}.
+In this section we evaluate multiple approaches to the optimization of the data distribution with an example dataset with $N = 504\,850$ summands and $p = 256$ \glspl{pe}.
+
+\subsubsection{Efficient message count determination}
+To calculate the score in \Cref{eq:distributionScore}, an algorithm must efficiently determine the number of \gls{pe}-intersecting nodes.
+A naive approach would be to check whether $rankFromIndex(parent(i)) \neq rankFromIndex(i)$ for each element $i \in \{0, \ldots, N-1\}$, requiring $O(N)$ time.
+
+\Cref{algo:MessageCountSolver} represents a faster alternative requiring $O(p + \log_2 N)$ time.
+The subroutine $largest\_child\_index$ returns the largest index that is still a child of the given subtree root, which is equal to setting all trailing zeros to $1$.
+\Cref{eq:LargestChildIndex} is an expression that calculates the $largest\_child\_index$ with bitwise operations.
+Note that \enquote{|} denotes the bitwise OR operation.
+\begin{algorithm}
+\caption{Message count solver}\label{algo:MessageCountSolver}
+\KwData{Distribution $n_i$, where $i \in \{0, \ldots, p - 1\}$}
+\KwResult{Number of \gls{pe}-intersecting nodes}
+\DontPrintSemicolon
+\SetAlgoLined
+$startIndices = \{\sum_{i=0}^j n_i \,\big|\, j \in [1, p-1] \}$\;
+$messageCount = 0$\;
+\ForEach{neighbouring elements $(startIndex, endIndex)$ of $startIndices$}{
+	$index = startIndex$\;
+	\While{$index < endIndex$}{
+		$messageCount = messageCount + 1$\;
+		$index = largest\_child\_index(index) + 1$\;
+	}
+}
+\KwRet{$messageCount$}
+\end{algorithm}
+\begin{equation}
+\label{eq:LargestChildIndex}
+largest\_child\_index(index) = index \;|\; (index - 1)
+\end{equation}
 
 
 \subsubsection{Even distribution}
-This is the base case where each \gls{pe} has the same number of summands. If the total number of summands $N$ is not divisible by the number of
-\glspl{pe}, the remainder will be put on the \glspl{pe} with the highest rank:
-
-\begin{equation}
-\label{eq:evenDistribution}
-n_i (N, p) = \begin{cases}
-\lfloor \tfrac{N}{p} \rfloor & i < N - N \bmod p \\
-\lfloor \tfrac{N}{p} \rfloor + 1 & \textrm{otherwise}
-\end{cases}
-\end{equation}
-
-In our model, the even distribution ensures maximal parallelization of the computational effort, since the maximum difference in the workload of a
-\gls{pe} is $1$. With our test dataset, $1401$ messages are necessary, a score that can easily be bested.
+Distributing the data evenly, as presented in \Cref{eq:upperDistribution}, ensures maximal parallelization of the computational effort, since the maximum difference in the workload of \glspl{pe} is $1$.
+With our test dataset ($N = 504\,850$, $p=256$), the execution of a single reduction requires $1401$ messages and 
 
 \subsubsection{Round down to power of 2}
 \label{sec:roundDownPower2Distribution}
