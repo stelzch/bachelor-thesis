@@ -1,9 +1,9 @@
 \chapter{Implementation}
 \label{ch:Implementation}
 
-In this chapter, we deduce the necessary equations to implement the reduction algorithm.
+In this chapter, we deduce the necessary equations to implement the reduction algorithm and present multiple optimizations.
 We focus on summation, our reduction operator $\reduce$ is the simple floating-point addition.
-While the recursive formula given in \Cref{eq:nodeReduceReduction} already defines a reduction algorithm, its implementation in imperative languages would heavily rely on the call stack to store subtotals.
+While the recursive formula given in \Cref{eq:nodeReduceReduction} already defines a reduction algorithm, its implementation in imperative languages would heavily rely on the call stack to store intermediate results.
 In practice, performing the calculations in opposite direction, from leaf nodes to the root, yields better runtimes.
 
 The binary representation of element indices has $\numLevels$ bits, since
@@ -42,7 +42,7 @@ If we interpret the bits of an index ordered from most- to least-significant as 
 \label{fig:indexTreePath}
 \end{figure}
 
-For any given $x$-coordinate $x > 0$, the \textbf{maximum $y$-coordinate} $\max_y(x)$ is equal to number of trailing zeros of $x$, i.e.\ the zero-indexed position of the least-significant bit set in $x$.
+For any given $x$-coordinate $x > 0$, the \textbf{maximum $y$-coordinate} $\max_y(x)$ is equal to the number of trailing zeros of $x$, i.e.\ the zero-indexed position of the least-significant bit set in $x$.
 We denote this expression as $\ffs (x) - 1$.
 The term $\ffs$ stems from the eponymous function of the C library \texttt{strings.h}.
 The path representation explains why the equality holds: the least-significant bit set is the last time the $x$-coordinate changes along the path from the root, since all following bits are zero and encode the decision \enquote{go up}.
@@ -57,8 +57,8 @@ Thus, we obtain the following definition of the parent function:
 \textrm{parent} (x, \max_y (x) ) := (x \BitAnd (x - 1), y + 1)
 \end{equation}
 
-Each \gls{pe} with rank $i$ (where $i \in [0, P - 1]$) stores $n_i$ consecutive elements.
-The global index of the first element assigned to a \gls{pe} is the so-called start index, and it is equal to the prefix sum of the assigned number of summands:
+Each \gls{pe} with rank $i$ (where $i \in [0, p - 1]$) stores $n_i$ consecutive elements.
+The global index of the first element assigned to a \gls{pe} is the so-called start index, and it is equal to the prefix sum of the assigned number of elements:
 
 \begin{align}
 \textrm{startIndex} (0) &= 0 \\
@@ -66,12 +66,12 @@ The global index of the first element assigned to a \gls{pe} is the so-called st
 \label{eq:startIndex}
 \end{align}
 
-This allows us to define the function rankFromIndex, which computes the index of the \gls{pe} that stores a given summand:
+This allows us to define the function rankFromIndex, which computes the index of the \gls{pe} that stores a given elements:
 \begin{equation}
-\textrm{rankFromIndex} (x) = \max \{i \in [0, P - 1] \;|\; \textrm{startIndex} (i) \leq x \}
+\textrm{rankFromIndex} (x) = \max \{i \in [0, p - 1] \;|\; \textrm{startIndex} (i) \leq x \}
 \end{equation}
 
-The definition of the set of \gls{pe}-intersecting summand indices also depends on the rankFromIndex function:
+The definition of the set of \gls{pe}-intersecting elements indices also depends on the rankFromIndex function:
 
 \newcommand{\rankIntersectingIndices}{I_{\textrm{\gls{pe}-intersecting}}}
 \begin{equation}
@@ -80,13 +80,13 @@ The definition of the set of \gls{pe}-intersecting summand indices also depends 
 
 \begin{algorithm}
 \caption{Summation procedure}\label{algo:SummationAlgo}
-\KwData{\gls{pe}-rank $rank$, $n_{rank}$ summands}
+\KwData{\gls{pe}-rank $rank$, $n_{rank}$ summands with coordinates $(startIndex, 0)$ through $(startIndex + n_{rank} - 1,0)$}
 \KwResult{Reduction result on the \gls{pe} with rank $0$}
 \DontPrintSemicolon
 \SetAlgoLined
 $startIndex \gets startIndices (rank)$\;
 $endIndex \gets startIndex + n_{\textrm{rank}}$\;
-\For{$i \gets \rankIntersectingIndices ([\textrm{startIndex}, \textrm{endIndex}]) $}{
+\For{$i \gets \rankIntersectingIndices ([\textrm{startIndex}, \textrm{endIndex})) $}{
 	\For{$y \gets [1, \max_y(x)]$}{\label{algo:SummationAlgoTopDownFor}
 		$x \gets startIndex$\;
 		\While{$x < endIndex$}{\label{algo:SummationAlgoInnerLoop}
@@ -110,7 +110,7 @@ $endIndex \gets startIndex + n_{\textrm{rank}}$\;
 }
 \end{algorithm}
 
-\Cref{algo:SummationAlgo} shows to procedure that each \gls{pe} follows.
+\Cref{algo:SummationAlgo} shows the procedure that each \gls{pe} follows.
 It consists of three nested loops.
 The most outer loop iterates over all \gls{pe}-intersecting indices in ascending order; its body is responsible for the reduction of the subtree rooted at the corresponding \gls{pe}-intersecting node.
 Because our reduction scheme is a left-leaning binary tree, nodes with lower indices occur earlier in the reduction equation, therefore processing \gls{pe}-intersecting indices in ascending order minimizes wait-times for other \glspl{pe}.
@@ -162,13 +162,13 @@ Typically, low-index outbound subtree roots located on the same \gls{pe} have th
 \Cref{fig:messageBufferingTree} is a minimal example for this observation: nodes $(3,0)$ and $(4,1)$ are outbound subtree roots that \gls{pe} 1 sends to \gls{pe} 0.
 \gls{pe} 1 can avoid the additional message latency if it does not send $(3,0)$ directly, but stores it in a buffer instead.
 Then, after finishing the computation of $(4,1)$, \gls{pe} 1 can send both results to \gls{pe} 0 in a single message.
-Because \gls{pe} 0 at first calculates $(0,1)$, the delayed transmission of $(3,0)$ does not impact the runtime negatively.
+Because \gls{pe} 0 calculates $(0,1)$ beforehand, the delayed transmission of $(3,0)$ does not impact the runtime negatively.
 
 The current implementation utilizes a buffer with a maximum of $4$ elements per message.
 After the summation routine has computed an outbound subtree root, it places the result in the outbound message buffer.
 Flushing of the buffer occurs in either one of the following cases: \begin{itemize} 
 \item The summation procedure inserts another outbound subtree root into the buffer which has a different target \gls{pe}.
-\item The summation procedure begins work on a outbound subtree root whose subtree size is greater than $64$ summands. This guarantees an upper limit on the time a finished result spends inside the buffer.
+\item The summation procedure begins work on an outbound subtree root whose subtree size is greater than $64$ summands. This guarantees an upper limit on the time a finished result spends inside the buffer.
 \end{itemize}
 
 The buffer utilization averages about $1.2$ summands per message, further tests have shown that relaxing above flushing criteria does not yield a runtime benefit, presumably because of the induced latency.
@@ -185,7 +185,7 @@ If the user can arbitrarily assign elements to \glspl{pe}, multiple optimization
 
 $t_{\textrm{MPI\_Send}}$ is an estimate of the time needed to send a single element between two \glspl{pe}, $t_\textrm{add}$ estimates the time needed to add two floating-point values with double precision (64 bit).
 On the shared-memory machine \textit{i10pc138}, these estimates were empirically measured to be $t_{\textrm{MPI\_Send}} \approx 281ns$ and $t_\textrm{add} \approx 4.15ns$.
-While this model does not take any data dependencies between subtotals into account, it balances the performance gain achieved by parallelization (represented by a low maximum on the right side of \Cref{eq:distributionScore}) against the communication overhead caused by binary tree fragmentation. 
+While this model does not take any data dependencies between \glspl{pe} into account, it balances the performance gain achieved by parallelization (represented by a low maximum on the right side of \Cref{eq:distributionScore}) against the communication overhead caused by binary tree fragmentation. 
 
 In this section we evaluate multiple approaches to the optimization of the data distribution with an example dataset with $N = 504\,850$ summands and $p = 256$ \glspl{pe}.
 
@@ -221,57 +221,76 @@ largest\_child\_index(index) = index \;|\; (index - 1)
 
 
 \subsubsection{Even distribution}
-Distributing the data evenly, as presented in \Cref{eq:upperDistribution}, ensures maximal parallelization of the computational effort, since the maximum difference in the workload of \glspl{pe} is $1$.
-With our test dataset ($N = 504\,850$, $p=256$), the execution of a single reduction requires $1401$ messages and 
+
+\begin{table}
+\centering
+\begin{tabular}{l|l|l}
+Distribution & Score & Message count \\
+\hline
+$n_i^\textrm{lower}$ & \SI{469.0}{\micro\second} & 1640 \\
+$n_i^\textrm{upper}$ & \SI{401.9}{\micro\second} & 1401
+\end{tabular}
+\caption{Scores for the even data distribution ($N = 504\,850$, $p=256$)}
+\label{table:EvenDistributionScores}
+\end{table}
+Distributing the data evenly, according to \Cref{eq:lowerDistribution} and \Cref{eq:upperDistribution}, ensures maximum parallelization of the computational effort, since the maximum difference in the workload of \glspl{pe} is $1$.
+As shown in \Cref{table:EvenDistributionScores}, distributing the elements evenly yields a score of around $\SI{400}{\micro\second}$.
+The advantages of the $n_i^\textrm{upper}$-distribution over the $n_i^\textrm{lower}$ distribution described in \Cref{sec:MessageCounts} express themselves in both a lower score and a lower message count.
 
 \subsubsection{Round down to power of 2}
 \label{sec:roundDownPower2Distribution}
-Since most messages are caused by \gls{pe}-boundaries that cut the binary tree at \enquote{inconvenient} places, in a first attempt of data distribution
-optimization we round down the number of assigned summands down to the nearest power of $2$,
-the reasoning being that powers of $2$ have a lot of trailing
-zeros and start indices with a lot of trailing zeros produce larger \gls{pe}-local subtrees, thus reducing the need for outbound messages.
+The even distribution does not take the binary tree structure into account and may place \gls{pe}-boundaries at \enquote{inconvenient} places, producing numerous \gls{pe}-intersecting nodes.
+By rounding down the number of assigned elements to the nearest power of $2$, we obtain start indices with a lot of trailing zeros, which is desirable since they produce larger \gls{pe}-local subtrees and reduce the number of \gls{pe}-intersecting nodes.
+\Cref{eq:roundDownPower2Distribution} describes this approach formally.
+The element count on the first $p - 1$ \glspl{pe} is a power of $2$.
+By placing the remaining elements on the last \gls{pe}, we ensure that an uneven number of remaining elements does not reduce the trailing zeros of the start indices of the other \glspl{pe}.
 
 \begin{equation}
 \label{eq:roundDownPower2Distribution}
-n_i (N, p) = \begin{cases}
+n_i^\textrm{power2} = \begin{cases}
 2^{\lfloor \log_2 \frac{N}{p} \rfloor} & i < p - 1\\
-N - \sum_{i=0}^{p-2} n_i (N,p) & i = p - 1
+N - \sum_{i=0}^{p-2} n_i^\textrm{power2} & i = p - 1
 \end{cases}
 \end{equation}
 
-The rounding decreases the amount of messages considerably. With our test dataset, the message count is in the vicinity of the lower bound of $p - 1$, only
-256 messages are needed, $20\%$ compared to the even distribution. This comes at the cost of an unbalanced summand distribution, the \gls{pe}
-with the highest rank, where the remaining summands are stored, contains almost half the summands.
-The inefficient parallelization is penalized with the second term of our score function, causing the score to be $2.7\times$ higher compared to
-the even distribution.
+\begin{table}
+\centering
+\begin{tabular}{l|l|l}
+Distribution & Score & Message count \\
+\hline
+$n_i^\textrm{power2}$ & \SI{1083.4}{\micro\second} & 256
+\end{tabular}
+\caption{Score of the $n_i^\textrm{power2}$ data distribution ($N = 504\,850$, $p=256$)}
+\label{table:Power2DistributionScore}
+\end{table}
+
+The rounding decreases the amount of messages considerably (\Cref{table:Power2DistributionScore}).
+With our test dataset, the message count is in the vicinity of the lower bound of $p - 1$, a $80\%$ reduction compared to the even distribution.
+This comes at the cost of an imbalanced element distribution, the \gls{pe} with the highest rank, which stores the remaining elements, contains about half the elements.
+The score function penalizes the inefficient parallelization with its the second term, causing the score to be $2.7\times$ higher compared to the even distribution.
 
 \subsubsection{Optimized-Index Distribution}
-As seen in the previous \Cref{sec:roundDownPower2Distribution}, unbounded distribution optimization yields small message counts at the expense of computational imbalance.
-In this section we will present a method to optimize the data distribution within certain bounds, to balance communication and computational costs.
+As seen in \Cref{sec:roundDownPower2Distribution}, unbounded distribution optimization yields small message counts at the expense of computational imbalance.
+In this section we will present a method to optimize the data distribution within certain bounds, to balance communication costs against computational costs.
 
-First, let $I_\textrm{start}(i)$ be a function that maps a \gls{pe}-index $i$ to the index of the first summand located on that \gls{pe}:
+Let $\textit{fairShare} := \tfrac{N}{p}$ be the approximate number of elements per \gls{pe} in an equivalent even distribution.
+We want to optimize each $\textit{startIndex}(i)$ to produce the least amount of \gls{pe}-intersecting nodes while keeping the differences in the computational workload between \glspl{pe} small.
+We express this requirement as follows:
 
-\begin{align}
-\label{eq:startIndexDefinition}
-I_\textrm{start}(0) &= 0 \\
-I_\textrm{start}(i) &= \sum_{j=0}^{i - 1} n_i
-\end{align}
-
-Furthermore, let $\textrm{fairShare} = \tfrac{N}{p}$ be the average number of summands per \gls{pe} in an equivalent even distribution. We want to optimize each $I_\textrm{start}$ to cut off the least amount of edges while maintaining a fairly even distribution. This requirement can be expressed as follows:
 \begin{equation}
 \label{eq:optimizedIndexBounds}
-\forall i \in \{1, \ldots, p - 1\}: I_\textrm{start}(i) - I'_\textrm{start}(i) \leq \alpha * \textrm{fairShare}
+\forall i \in \{1, \ldots, p - 1\}: \textit{startIndex}(i) - \textit{startIndex}'(i) \leq \alpha * \textrm{fairShare}
 \end{equation}
-where $I'_\textrm{start}$ is our optimized start index and $\alpha$ is the maximum deviation relative to the even distribution.
-We now can iteratively improve our start index by applying the parent function \ref{eq:parent} until we are about to exceed the predefined bounds:
+where $\textit{startIndex}'(i)$ is the optimized start index and $\alpha$ is the maximum deviation relative to the even distribution.
+In \Cref{algo:optimizeIndex}, we iteratively improve our start index by applying the \textit{parent}-function (\Cref{eq:parent}) until the proposed index violates \Cref{eq:optimizedIndexBounds}.
+We obtain the complete data distribution $n_i^\textrm{optimized}$ by executing \Cref{algo:optimizeIndex} on each start index of the $n_i^\textrm{upper}$-distribution.
 
 \begin{algorithm}
 \caption{Index optimization procedure}\label{algo:optimizeIndex}
 \DontPrintSemicolon
 \SetAlgoLined
-\SetKwInOut{Input}{input}
-
-\Input{\gls{pe}-index $i$, start index $j$, maximum deviation parameter $\alpha$}
+\KwData{\gls{pe}-rank $i$, start index $j$, maximum deviation parameter $\alpha$}
+\KwResult{Optimized start index for the \gls{pe} with rank $i$}
 
 $currentIndex = j$\;
 $proposedIndex = currentIndex$\;
@@ -280,15 +299,28 @@ $proposedIndex = currentIndex$\;
 	$currentIndex = proposedIndex$\;
 	$proposedIndex = parent(initialIndex)$\;
 }
+\Return $currentIndex$\;
 \end{algorithm}
 
-After hand-tuning the parameter $\alpha = 0.0005$ with $N = 239 763$, $p = 256$ the runtimes measured over $40 000$ repetitions are plotted in \Cref{fig:distribution_runtimes}.
-The runtime benefit is clearly visible, the optimized distribution is about $4µs$ faster than the even distribution.
+
+\begin{table}
+\centering
+\begin{tabular}{l|l|l}
+Distribution & Score & Message count \\
+\hline
+$n_i^\textrm{optimized}$ & \SI{184.5}{\micro\second} & 621
+\end{tabular}
+\caption{Score of the $n_i^\textrm{optimized}$ data distribution ($N = 504\,850$, $p=256$)}
+\label{table:Power2DistributionScore}
+\end{table}
+
+\Cref{fig:distribution_runtimes} shows a histogram of the summation duration measured over $4\,000$ repetitions for our test dataset with a maximum deviation of $\alpha = 0.2$.
+The runtime benefit of an optimized data distribution is visible, with optimized distribution the algorithm calculates results about $\SI{4}{\micro\second}$ faster than with  an even distribution.
 
 \begin{figure}
 \centering
 \includegraphics[scale=0.75]{figures/distribution_experiment}
-\caption{Runtime comparison of unoptimized vs.\ optimized data distribution}
+\caption{Runtime comparison of even vs.\ optimized data distribution}
 \label{fig:distribution_runtimes}
 \end{figure}
 
@@ -304,49 +336,16 @@ The runtime benefit is clearly visible, the optimized distribution is about $4µ
 
 \end{figure}
 
-Algorithm \ref{algo:SummationAlgo} uses the $rankFromIndex$ function to lookup the \gls{pe}-rank for a given summand index. This function
-maps the binary tree structure to the actual computing topology and its
-execution speed is performance-critical due to its position inside a frequently executed loop.
+\Cref{algo:SummationAlgo} uses the $rankFromIndex$ function to lookup the \gls{pe}-rank for a given element index.
+This function maps the binary tree structure to the underlying computing topology and its execution speed is performance-critical due to its position inside a frequently executed loop.
 
-The initial implementation used a loop to find the first entry
-in the $startIndices$ array which numerically exceeds the input index.
-The runtime of this algorithm is $O(p)$, where $p$ is once again the number
-of \glspl{pe}.
-Micro-benchmarks revealed the linearily increasing runtime and the need for optimization (see figure \ref{fig:microbenchmarkRankFromIndex}).
-The currently
-implemented version uses a hash map to scan for the start index, which yields a runtime in $O(\log(p))$.
+The initial implementation used a loop to find the first entry in the \textit{startIndices} array which numerically exceeds the input index.
+The runtime of this algorithm is $O(p)$.
+Microbenchmarks revealed the linearly increasing runtime and the need for optimization (see \Cref{fig:microbenchmarkRankFromIndex}).
+The currently implemented version uses a hash map to scan for the start index, which yields a runtime in $O(\log(p))$.
 
 \subsection{Vectorization}
 \label{sec:Vectorization}
-
-Recent advances in computing power can largely be attributed to increased parallelism.
-To utilize the capabilities of modern CPUs to the fullest, \gls{simd} techniques must be employed.
-
-Compared to the simple left-to-right reduction presented in section
-\ref{sec:SequentialLeftToRightReduction}, a reduction tree lends itself better to parallelization, since an algorithm can accumulate partial sums independently. The implementation at hand uses x86 \gls{avx}, specifically AVX-2.
-AVX-2 registers are $256$ bits wide and can therefore store four double precision floating-point numbers. Algorithm \ref{algo:AVXTreeAccumulation} uses two registers to sum eight summands at once.
-Because AVX-2 manipulate data within 128-bit lanes, it is necessary to extract the upper 128-bit after the first horizontal add in order to follow the correct summation order.
-Figure \ref{fig:avxSchema} displays the register contents over time.
-
-
-\begin{algorithm}
-\caption{8-tree reduction with AVX-2 instructions}
-\label{algo:AVXTreeAccumulation}
-\DontPrintSemicolon
-\SetAlgoLined
-
-$a \gets mm256\_load\_pd(buffer[i])$\;
-$b \gets mm256\_load\_pd(buffer[i + 4])$\;
-$level1Sum \gets mm256\_hadd\_pd(a,b)$\;
-
-$c \gets mm256\_extractf128\_pd(level1Sum 1)$\;
-$d \gets mm256\_castpd256\_pd128(level1Sum)$\;
-$level2Sum \gets mm\_add\_pd(c, d)$\;
-
-$level3Sum \gets mm\_hadd\_pd(level2Sum, level2Sum)$\;
-
-$result \gets mm\_cvtsd\_f64(level3Sum)$\;
-\end{algorithm}
 
 \begin{figure}
 \begin{tikzpicture}[
@@ -373,8 +372,8 @@ block/.style={draw,minimum width=1.6cm, text centered,minimum height=0.8cm,font=
 \node[block,right=0cm of cd](gh){$G+H$};
 
 \node[below=0.8cm of {0,0}](op1) {$\_mm256\_hadd\_pd$};
-\path[->,very thick] (d) edge (-1.6,-2);
-\path[->,very thick] (e) edge (1.6,-2);
+\path[->,very thick] (c) edge (-1.6,-2);
+\path[->,very thick] (f) edge (1.6,-2);
 
 \node[block,below=4cm of c](ab2){$A+B$};
 \node[block,right=0cm of ab2](ef2){$E+F$};
@@ -400,3 +399,44 @@ block/.style={draw,minimum width=1.6cm, text centered,minimum height=0.8cm,font=
 \caption{Register content during AVX-2 subtree summation}
 \label{fig:avxSchema}
 \end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.75]{figures/benchmarkVectorization}
+\caption{Microbenchmark comparing sequential summation to AVX-2 binary tree reduction for $p=1$}
+\label{fig:benchmarkVectorization}
+\end{figure}
+
+The theoretical per-node peak of \gls{flops} increases dramatically under the utilization of \gls{simd} capabilities~\cite{dolbeau_theoretical_2018}.
+While modern compilers try to automatically vectorize existing code, optimization by hand can yield better results.
+
+Compared to the simple left-to-right reduction presented in \Cref{sec:SequentialLeftToRightReduction}, a reduction tree lends itself better to parallelization, since an algorithm can reduce subtrees independently.
+The implementation at hand uses x86 \gls{avx}, specifically AVX-2.
+AVX-2 registers are $256$ bits wide and can therefore store four double precision floating-point numbers.
+\Cref{algo:AVXTreeAccumulation} uses two registers to accumulate a subtree of eight elements at once.
+Because AVX-2 instructions manipulate data within 128-bit lanes, it is necessary to extract the upper 128-bit after the first horizontal add in order to follow the correct summation order.
+\Cref{fig:avxSchema} displays the register contents over time.
+\begin{algorithm}
+\caption{8-tree reduction with AVX-2 instructions}
+\label{algo:AVXTreeAccumulation}
+\DontPrintSemicolon
+\SetAlgoLined
+
+$a \gets mm256\_load\_pd(buffer[i])$\;
+$b \gets mm256\_load\_pd(buffer[i + 4])$\;
+$level1Sum \gets mm256\_hadd\_pd(a,b)$\;
+
+$c \gets mm256\_extractf128\_pd(level1Sum 1)$\;
+$d \gets mm256\_castpd256\_pd128(level1Sum)$\;
+$level2Sum \gets mm\_add\_pd(c, d)$\;
+
+$level3Sum \gets mm\_hadd\_pd(level2Sum, level2Sum)$\;
+
+$result \gets mm\_cvtsd\_f64(level3Sum)$\;
+\end{algorithm}
+
+The implementation at hand uses \Cref{algo:AVXTreeAccumulation} as a subroutine inside \Cref{algo:SummationAlgo} to advance the iterative reduction three levels per iteration.
+If the remaining number of elements in the current iteration is not divisible by eight, the algorithm processes the remaining elements using non-vectorized instructions.
+\Cref{fig:benchmarkVectorization} compares the runtime of the \texttt{std::accumulate} routine from the C++ standard library against the implementation at hand.
+Since only one \gls{pe} executes this microbenchmark, no communication takes place and all runtime costs are purely computational.
+For smaller workloads ($N < 64$), the overhead introduced by the vectorization is larger than the performance gains, but for larger workloads the AVX-2 implementation outperforms \texttt{std::accumulate}.

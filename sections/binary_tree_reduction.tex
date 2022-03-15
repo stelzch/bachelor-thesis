@@ -152,6 +152,7 @@ In \Cref{fig:distributed_binary_tree}, node A with coordinates $(2,1)$ and node 
 In this case, nodes $(3,0)$ and $(6,1)$ are outbound subtree roots.
 
 \section{Message counts}
+\label{sec:MessageCounts}
 The main hinderance to efficient parallelization as outlined in the previous section is the need for synchronization between \glspl{pe} because of data dependencies in the form of \gls{pe}-intersecting nodes.
 The target implementation utilizes the \gls{mpi} to communicate between different \glspl{pe} and since the messages are small (one double precision floating-point value occupies 8 bytes, or 64 bits), the number of messages between \glspl{pe} dominates the communication overhead.
 Under the assumption that messages are not bundled together by means of a message buffer, the message count is equal to the number of \gls{pe}-intersecting nodes.
