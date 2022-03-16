@@ -2,7 +2,7 @@
 \label{ch:Implementation}
 
 In this chapter, we deduce the necessary equations to implement the reduction algorithm and present multiple optimizations.
-We focus on summation, our reduction operator $\reduce$ is the simple floating-point addition.
+We focus on summation, the reduction operator $\reduce$ will be the simple floating-point addition.
 While the recursive formula given in \Cref{eq:nodeReduceReduction} already defines a reduction algorithm, its implementation in imperative languages would heavily rely on the call stack to store intermediate results.
 In practice, performing the calculations in opposite direction, from leaf nodes to the root, yields better runtimes.
 
@@ -38,7 +38,7 @@ If we interpret the bits of an index ordered from most- to least-significant as 
 
 \node at (10,-2) {$6_{10} = 0110_2$};
 \end{tikzpicture}
-\caption{Example path for index $6$ with $N = 10$}
+\caption{Example path for index $6$ with $N = 9$}
 \label{fig:indexTreePath}
 \end{figure}
 
@@ -48,7 +48,7 @@ The term $\ffs$ stems from the eponymous function of the C library \texttt{strin
 The path representation explains why the equality holds: the least-significant bit set is the last time the $x$-coordinate changes along the path from the root, since all following bits are zero and encode the decision \enquote{go up}.
 
 To find the coordinates of the \textbf{parent node} of an inner node $(x, \max_y(x))$, we replace the last (least-significant) \enquote{go right and up} decision with \enquote{go up}. 
-Numerically, this is equivalent to cancelling the least significant bit of $x$.
+Numerically, this is equivalent to cancelling the least-significant bit of $x$.
 The expression $x \BitAnd (x - 1)$, where $'\BitAnd'$ is the bitwise AND-operation, is an efficient implementation of this operation.
 Thus, we obtain the following definition of the parent function:
 
@@ -417,10 +417,12 @@ AVX-2 registers are $256$ bits wide and can therefore store four double precisio
 Because AVX-2 instructions manipulate data within 128-bit lanes, it is necessary to extract the upper 128-bit after the first horizontal add in order to follow the correct summation order.
 \Cref{fig:avxSchema} displays the register contents over time.
 \begin{algorithm}
-\caption{8-tree reduction with AVX-2 instructions}
+\caption{8-tree summation with AVX-2 instructions}
 \label{algo:AVXTreeAccumulation}
 \DontPrintSemicolon
 \SetAlgoLined
+\KwData{Buffer \textit{buffer} with at least $8$ entries at offset $i$}
+\KwResult{Subtree sum of $8$ elements}
 
 $a \gets mm256\_load\_pd(buffer[i])$\;
 $b \gets mm256\_load\_pd(buffer[i + 4])$\;
@@ -432,7 +434,7 @@ $level2Sum \gets mm\_add\_pd(c, d)$\;
 
 $level3Sum \gets mm\_hadd\_pd(level2Sum, level2Sum)$\;
 
-$result \gets mm\_cvtsd\_f64(level3Sum)$\;
+\Return $mm\_cvtsd\_f64(level3Sum)$\;
 \end{algorithm}
 
 The implementation at hand uses \Cref{algo:AVXTreeAccumulation} as a subroutine inside \Cref{algo:SummationAlgo} to advance the iterative reduction three levels per iteration.
