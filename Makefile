@@ -1,7 +1,11 @@
-all: thesis.pdf
+all: thesis.pdf figures
 
 clean:
 	latexmk -CA thesis
+
+figures:
+	python3 scripts/benchmark_plot.py
+	python3 scripts/buffer_sizes.py
 
 thesis.pdf: *.tex sections/*.tex
 	latexmk -pdflua thesis.tex

@@ -3,6 +3,7 @@
 
 # In[2]:
 
+import os
 import matplotlib.pyplot as plt
 import numpy as np
 import sqlite3
@@ -46,7 +47,9 @@ def fetch_durations(run_id, datasetQuery='%'):
     return plot_data
 
 
-db = 'file:../project/benchmarks/results.db?mode=ro'
+db_path = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + '/../project/benchmarks/results.db')
+print(db_path)
+db = f"file:{db_path}?mode=ro"
 con = sqlite3.connect(db, uri=True)
 cur = con.cursor()
 
@@ -209,6 +212,7 @@ def distribution_histogram():# {{{
     f, ax = plt.subplots(1)
     ax.set_title("Runtime Histogram N = 504 850, p = 256")
     ax.xaxis.set_major_formatter(formatter0)
+    ax.set_ylabel("Count")
 
     ax.hist(durations_even, bins=bins, color=color1, label="even distribution")
     ax.hist(durations_optimized, bins=bins, color=color2, label="optimized distribution ($\\alpha=0.2$)")
@@ -218,17 +222,29 @@ def distribution_histogram():# {{{
 
 def singlethread_tree_reduction(microbenchmark_run_id):
     first = lambda x: x[0] * 1e-9
+    snd = lambda x: x[1] * 1e-9
+
     cur.execute("""
-        SELECT time,benchmark FROM microbenchmark_results WHERE run_id = ? AND benchmark LIKE 'BM_accumulative/%' ORDER BY id ASC
+        SELECT time,stddev,benchmark FROM microbenchmark_results WHERE run_id = ? AND benchmark LIKE 'BM_accumulative/%' ORDER BY id ASC
     """, (microbenchmark_run_id,))
     result = cur.fetchall()
     accumulative_timings = list(map(first, result))
-    X = list(map(lambda x: int(x[1].split("/")[1]), result))
+    accumulative_stddev = list(map(snd, result))
+    X = list(map(lambda x: int(x[2].split("/")[1]), result))
 
     cur.execute("""
-        SELECT time,benchmark FROM microbenchmark_results WHERE run_id = ? AND benchmark LIKE 'BM_iterative/%' ORDER BY id ASC
+        SELECT time,stddev,benchmark FROM microbenchmark_results WHERE run_id = ? AND benchmark LIKE 'BM_iterative/%' ORDER BY id ASC
     """, (microbenchmark_run_id,))
-    iterative_timings = list(map(first, cur.fetchall()))
+    result = cur.fetchall()
+    iterative_timings = list(map(first, result))
+    iterative_stddev = list(map(snd, result))
+
+    cur.execute("""
+        SELECT time,stddev,benchmark FROM microbenchmark_results WHERE run_id = ? AND benchmark LIKE 'BM_recursive/%' ORDER BY id ASC
+    """, (microbenchmark_run_id,))
+    result = cur.fetchall()
+    recursive_timings = list(map(first, result))
+    recursive_stddev = list(map(snd, result))
 
     f, ax = plt.subplots(1)
 
@@ -237,11 +253,21 @@ def singlethread_tree_reduction(microbenchmark_run_id):
 
     ax.set_xscale('log', base=2)
     ax.set_yscale('log', base=10)
-    ax.plot(X, accumulative_timings, label='std::accumulate')
-    ax.plot(X, iterative_timings, label='AVX-2 implementation')
+    ax.errorbar(X, accumulative_timings, yerr=accumulative_stddev, fmt='.-', label='std::accumulate', capsize=3.0)
+    ax.errorbar(X, iterative_timings, yerr=iterative_stddev, fmt='.-', label='AVX-2 implementation', capsize=3.0)
+    ax.errorbar(X, recursive_timings, yerr=recursive_stddev, fmt='.-', label='Recursive implementation', capsize=3.0)
     ax.legend(loc='upper left')
     ax.yaxis.set_major_formatter(formatter0)
-    #ax.xaxis.set_major_formatter(formatter1)
+    ax.xaxis.set_ticks(X)
+
+    # h-lines
+    i = 5
+    linestyle = 'dashed'
+    linewidth = 1.0
+    ax.axhline(accumulative_timings[i], color="gray", linestyle=linestyle, linewidth=linewidth)
+    ax.axhline(recursive_timings[i], color="gray", linestyle=linestyle, linewidth=linewidth)
+    ax.axhline(iterative_timings[i], color="gray", linestyle=linestyle, linewidth=linewidth)
+
     ax.set_ylabel("Time")
     ax.set_xlabel("Number of elements")
 
@@ -258,4 +284,4 @@ if __name__ == '__main__':
         violin_plot(last_complete, f"%{dataset}%").savefig(f"figures/violin{dataset.capitalize()}.pdf")
     slowdown_plot(last_complete).savefig("figures/slowdownPlot.pdf")
     distribution_histogram().savefig("figures/distribution_experiment.pdf")
-    singlethread_tree_reduction(4).savefig("figures/benchmarkVectorization.pdf")
+    singlethread_tree_reduction(5).savefig("figures/benchmarkVectorization.pdf")
