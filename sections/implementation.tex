@@ -60,16 +60,23 @@ The global index of the first element assigned to a \gls{pe} is the so-called st
 \label{eq:startIndex}
 \end{align}
 
-This allows us to define the function rankFromIndex, which computes the index of the \gls{pe} that stores a given elements:
+This allows us to define the function rankFromIndex, which computes the index of the \gls{pe} that stores the given element:
 \begin{equation}
 \textrm{rankFromIndex} (x) = \max \{i \in [0, p - 1] \;|\; \textrm{startIndex} (i) \leq x \}
 \end{equation}
 
-The definition of the set of \gls{pe}-intersecting elements indices also depends on the rankFromIndex function:
+For any given set $X$ of $x$-coordinates, we can use the rankFromIndex-function to determine the $x$-coordinates of outbound subtree roots, i.e. nodes whose parent node lies on a different \gls{pe}:
 
 \newcommand{\rankIntersectingIndices}{I_{\textrm{\gls{pe}-intersecting}}}
 \begin{equation}
-\rankIntersectingIndices (I) = \{i \in I \;|\; \textrm{rankFromIndex} (i) \neq \textrm{rankFromIndex} (\textrm{parent} (i)) \}
+\rankIntersectingIndices (X) = \{x \in X \;|\; \textrm{rankFromIndex} (x) \neq \textrm{rankFromIndex} (\textrm{parent} (x)) \}
+\end{equation}
+
+$largest\_subtree\_child\_index$ returns the largest $x$-coordinate of all child nodes of the given subtree root, which is equal to setting all trailing zeros of the given index to $1$.
+This can be calculated using the bitwise OR-operation \enquote{|}:
+\begin{equation}
+\label{eq:LargestChildIndex}
+largest\_subtree\_child\_index(index) = index \;|\; (index - 1)
 \end{equation}
 
 \begin{algorithm}
@@ -80,27 +87,40 @@ The definition of the set of \gls{pe}-intersecting elements indices also depends
 \SetAlgoLined
 $startIndex \gets startIndices (rank)$\;
 $endIndex \gets startIndex + n_{\textrm{rank}}$\;
-\For{$i \gets \rankIntersectingIndices ([\textrm{startIndex}, \textrm{endIndex})) $}{
-	\For{$y \gets [1, \max_y(x)]$}{\label{algo:SummationAlgoTopDownFor}
-		$x \gets startIndex$\;
-		\While{$x < endIndex$}{\label{algo:SummationAlgoInnerLoop}
-			$a \gets (x, y - 1)$\;
-			$indexB \gets x + 2^{y - 1}$\;
-			\uIf{$indexB \geq N$} {
+\uIf{$rank = 0$}{
+	$outboundSubtreeRoots \gets \{0\}$\;
+}
+\Else{
+	$outboundSubtreeRoots \gets \rankIntersectingIndices ([\textrm{startIndex}, \textrm{endIndex}))$\;
+}
+\For{$i \gets  outboundSubtreeRoots$}{
+	\tcp{Reduce subtree level-by-level}
+	\For{$y \gets [1, \max_y(x)]$}{
+		\label{algo:SummationAlgoTopDownFor}
+		$x \gets i$\;
+		\While{$x \leq largest\_subtree\_child\_index(x)$}{\label{algo:SummationAlgoInnerLoop}
+			$x_a \gets x$ \tcp*{$x$-coordinate of left child node}
+			$x_b \gets x + 2^{y - 1}$ \tcp*{$x$-coordinate of right child node}
+			$a \gets (x_a, y - 1)$ \tcp*{value of left child node}
+			\uIf{$x_b \geq N$} {
+				\tcp{No adjacent node, passthrough}
 				$(x,y) \gets a$\;\label{algo:SummationAlgoPassthrough}
 			}
-			\uElseIf{$\textrm{rankFromIndex}(indexB) \neq rank$}{
-				$b \gets \textrm{receive}\ (indexB, \max_y(indexB))$\;\label{algo:SummationAlgoRankIntersectingNode}
+			\uElseIf{$\textrm{rankFromIndex}(x_b) \neq rank$}{
+				\tcp{\gls{pe}-intersecting node, fetch over \gls{mpi}}
+				$b \gets \textrm{receive}\ (x_b, \max_y(x_b))$\;\label{algo:SummationAlgoRankIntersectingNode}
 				$(x,y) \gets a + b$\;
 			}
 			\Else{
-				$b \gets (indexB, y-1)$\; \label{algo:SummationAlgoInnerNode}
+				$b \gets (x_b, y - 1)$\tcp*{value of right child node} \label{algo:SummationAlgoInnerNode}
 				$(x,y) \gets a + b$\;
 			}
 			$x \gets x + 2^{y - 1}$\;
 		}
 	}
-	$\textrm{send } (i, \max_y(i))$\;
+	\If{$rank \neq 0$}{
+		$\textrm{send } (i, \max_y(i))$\;
+	}
 }
 \end{algorithm}
 
@@ -116,10 +136,10 @@ The distinctions made in Equations \eqref{eq:nodeReduceBaseCase}--\eqref{eq:node
 \section{Applied Optimizations}
 \label{sec:AppliedOptimizations}
 
-While the implementation used in \Cref{ch:Experiments} follows \Cref{algo:SummationAlgo} in principle, it includes multiple optimizations concerning both the calculation and the communication of results.
-Message Buffering (\Cref{sec:MessageBuffering}) allows to reduce the number of messages sent across the cluster and therefore reduces communication times.
-The number of messages further decreases if the program is in control over the data distribution (\Cref{sec:DataDistribution}).
-Vectorizing the additions (\Cref{sec:Vectorization}) yielded the largest performance gain of all optimizations presented in this section.
+The implementation used in \Cref{ch:Experiments} follows \Cref{algo:SummationAlgo} with the following optimizations.
+Message Buffering (\Cref{sec:MessageBuffering}) allows to reduce the number of messages sent across the network and therefore reduces the communication overhead.
+The number of messages further decreases with a data distribution optimized for the reduction algorithm (\Cref{sec:DataDistribution}).
+Vectorizing the additions (\Cref{sec:Vectorization}) yields the largest performance gain of all optimizations presented in this section.
 
 \subsection{Message Buffering}
 \label{sec:MessageBuffering}
@@ -188,30 +208,29 @@ To calculate the score in \Cref{eq:distributionScore}, an algorithm must efficie
 A naive approach would be to check whether $rankFromIndex(parent(i)) \neq rankFromIndex(i)$ for each element $i \in \{0, \ldots, N-1\}$, requiring $O(N)$ time.
 
 \Cref{algo:MessageCountSolver} represents a faster alternative requiring $O(p + \log_2 N)$ time.
-The subroutine $largest\_child\_index$ returns the largest index that is still a child of the given subtree root, which is equal to setting all trailing zeros to $1$.
-\Cref{eq:LargestChildIndex} is an expression that calculates the $largest\_child\_index$ with bitwise operations.
-Note that \enquote{|} denotes the bitwise OR operation.
+
 \begin{algorithm}
 \caption{Message count solver}\label{algo:MessageCountSolver}
 \KwData{Distribution $n_i$, where $i \in \{0, \ldots, p - 1\}$}
 \KwResult{Number of \gls{pe}-intersecting nodes}
 \DontPrintSemicolon
 \SetAlgoLined
-$startIndices = \{\sum_{i=0}^j n_i \,\big|\, j \in [1, p-1] \}$\;
-$messageCount = 0$\;
-\ForEach{neighbouring elements $(startIndex, endIndex)$ of $startIndices$}{
+$startIndices \gets \{\sum_{i=0}^j n_i \,\big|\, j \in [1, p-1] \}$\;
+$messageCount \gets 0$\;
+$i \gets 0$\; 
+\While{$i + 1 < ranks$}{
+	$startIndex = startIndices[i]$\;
+	$endIndex = startIndices[i + 1]$\;
 	$index = startIndex$\;
 	\While{$index < endIndex$}{
-		$messageCount = messageCount + 1$\;
-		$index = largest\_child\_index(index) + 1$\;
+		$messageCount \gets messageCount + 1$\;
+		$index \ge´ts largest\_subtree\_child\_index(index) + 1$\;
 	}
+	$i \gets i + 1$\;
 }
 \KwRet{$messageCount$}
 \end{algorithm}
-\begin{equation}
-\label{eq:LargestChildIndex}
-largest\_child\_index(index) = index \;|\; (index - 1)
-\end{equation}
+
 
 
 \subsubsection{Even distribution}

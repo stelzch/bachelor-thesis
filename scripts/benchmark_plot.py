@@ -46,7 +46,7 @@ def fetch_durations(run_id, datasetQuery='%'):
     return plot_data
 
 
-db = 'file:project/benchmarks/results.db?mode=ro'
+db = 'file:../project/benchmarks/results.db?mode=ro'
 con = sqlite3.connect(db, uri=True)
 cur = con.cursor()
 
@@ -250,12 +250,12 @@ def singlethread_tree_reduction(microbenchmark_run_id):
     return f
 
 
-    
-last_complete = 69 # last_complete_benchmark()
-print(f"Utilizing results from run {last_complete}")
-scatter_plot(last_complete).savefig("figures/benchmarkScatter.pdf")
-for dataset in ["354", "rokasA4", "rokasA8", "PeteD8", "rokasD1", "rokasD4", "rokasD7", "fusob", "multi100", "prim"]:
-    violin_plot(last_complete, f"%{dataset}%").savefig(f"figures/violin{dataset.capitalize()}.pdf")
-slowdown_plot(last_complete).savefig("figures/slowdownPlot.pdf")
-distribution_histogram().savefig("figures/distribution_experiment.pdf")
-singlethread_tree_reduction(4).savefig("figures/benchmarkVectorization.pdf")
+if __name__ == '__main__':    
+    last_complete = 69 # last_complete_benchmark()
+    print(f"Utilizing results from run {last_complete}")
+    scatter_plot(last_complete).savefig("figures/benchmarkScatter.pdf")
+    for dataset in ["354", "rokasA4", "rokasA8", "PeteD8", "rokasD1", "rokasD4", "rokasD7", "fusob", "multi100", "prim"]:
+        violin_plot(last_complete, f"%{dataset}%").savefig(f"figures/violin{dataset.capitalize()}.pdf")
+    slowdown_plot(last_complete).savefig("figures/slowdownPlot.pdf")
+    distribution_histogram().savefig("figures/distribution_experiment.pdf")
+    singlethread_tree_reduction(4).savefig("figures/benchmarkVectorization.pdf")
