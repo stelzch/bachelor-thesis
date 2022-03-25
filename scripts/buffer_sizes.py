@@ -16,15 +16,13 @@ def compare_runs(run_ids, labels, mode='tree'):
 
     f = plt.figure()
     ax = f.subplots(1)
-    ax.set_xscale("log")
+    ax.set_xscale("log", base=2)
     ax.set_yscale("log")
     ax.set_ylabel('Accumulate Time')
     ax.set_xlabel('number of summands')
 
     formatter0 = EngFormatter(unit='s', places=0)
-    formatter1 = EngFormatter(places=0)
     ax.yaxis.set_major_formatter(formatter0)
-    ax.xaxis.set_major_formatter(formatter1)
 
     for label, measurements in data.items():
         x = map(select(0), measurements)
@@ -40,3 +38,4 @@ def compare_runs(run_ids, labels, mode='tree'):
     return f
 
 compare_runs([83, 85, 84, 82], ["16", "32", "64", "128"]).savefig("figures/bufferSizes.pdf")
+#compare_runs([86, 87], ["message buffer enabled", "message buffer disabled"]).savefig("figures/messageBufferComparison.pdf")

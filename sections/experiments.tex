@@ -1,22 +1,23 @@
 \chapter{Experiments}
 \label{ch:Experiments}
 
-In this chapter, we will compare the runtimes of three summation procedures:
+In this chapter, we compare the runtimes of three summation modes:
 \begin{itemize}
-  \item the binary tree summation algorithm as presented in chapters \ref{ch:BinaryTreeSummation} and \ref{ch:Implementation}
+  \item the Binary Tree Summation algorithm as presented in \Cref{ch:BinaryTreeSummation} and \Cref{ch:Implementation}
   \item the ReproBLAS reduce operation
-  \item a bitwise-irreproducible implementation with \texttt{MPI\_Allreduce} and \texttt{std::accumulate} as baseline.
+  \item a bitwise-irreproducible implementation with \texttt{MPI\_Allreduce} and \texttt{std::accumulate} as baseline
 \end{itemize}
 
 \section{Experimental Setup}
 \label{sec:ExperimentalSetup}
-The machine \textit{i10pc138}, which has two AMD EPYC 7713 CPUs with $64$ cores each, $2$ threads per core for a total of $256$ CPUs and $1024$ GB of DDR4 main memory, executed all benchmarks with less than $257$ \glspl{pe}.
-The bwUniCluster 2.0 ran all other benchmarks.
+We ran shared-memory benchmarks on a machine with two AMD EPYC 7713 CPUs with $64$ cores each for a total of $p=256$ \glspl{pe} with hyper-threading enabled.
+Distributed-memory benchmarks with more than $256$ \glspl{pe} were executed on multiple thin nodes of the bwUniCluster 2.0 which have two Intel Xeon Gold 6230  with $40$ cores ($80$ threads) per node.
+
 
 \begin{table}
 \centering
 \begin{tabular}{r|l}
-\textbf{dataset name} & \textbf{number of summands} \\
+\textbf{dataset name} & \textbf{number of elements $N$} \\
 354 & $460$ \\
 multi100 & $767$ \\
 prim & $898$ \\
@@ -32,53 +33,101 @@ dna\_rokasD7 & $21\,410\,970$ \\
 \label{table:datasets}
 \end{table}
 
-Input data was extracted from RAxML-NG workloads in the form of an array of double-precision floating point numbers representing per-site log-likelihood values.
-The datasets come in various sizes, depending on the multiple sequence alignment length. Table \ref{table:datasets} gives an overview.
-Each benchmark run performs the following steps for each summation mode (\texttt{reproblas}, \texttt{allreduce}, \texttt{tree}) and each dataset:
+Input data stems from RAxML-NG runs in the form of an array of double-precision floating point numbers representing per-site log-likelihood values.
+Datasets range from $460$ to $21\,410\,970$ elements, depending on the multiple sequence alignment length.
+\Cref{table:datasets} gives an overview.
+The benchmark execution performs the following steps for each summation mode (\texttt{reproblas}, \texttt{allreduce}, \texttt{tree}) and each dataset:
 \begin{enumerate}
-\item Load input data from file and distribute it among the \glspl{pe}
-\item Perform the summation $100$ times, measuring the duration for each time
-\item Prune the first and last eight measurements
+\item Load input data from the file and distribute it among the \glspl{pe}
+\item Perform the summation $100$ times, measuring the duration for each iteration
+\item Discard the first and last eight measurements
 \end{enumerate}
 
 \section{Results}
 \label{sec:Results}
 
 \begin{figure}
-\includegraphics[scale=1]{figures/benchmarkScatter.pdf}
-\caption{Summation runtime for different datasets across $256$ \glspl{pe}}
+\begin{subfigure}{1.0\textwidth}
+\centering
+\includegraphics[scale=0.75]{figures/benchmarkScatter.pdf}
+\caption{Shared memory, $p=256$}
+\label{fig:benchmarkOverview256}
+\end{subfigure}
+
+\begin{subfigure}{1.0\textwidth}
+\centering
+\includegraphics[scale=0.75]{figures/benchmarkScatter1280.pdf}
+\caption{Distributed memory, $p=1280$}
+\label{fig:benchmarkOverview1280}
+\end{subfigure}
+
+\caption{Median accumulation time for different datasets. Error bars depict 1st and 99th percentile.}
 \label{fig:benchmarkOverview}
 \end{figure}
 
 \begin{figure}
 \centering
-\includegraphics[scale=0.8]{figures/slowdownPlot.pdf}
-\caption{Relative slowdown of binary tree summation compared to ReproBLAS}
+\includegraphics[scale=0.75]{figures/slowdownPlot.pdf}
+\caption{Relative slowdown of Binary Tree Summation compared to ReproBLAS for $p=256$ \glspl{pe}}
 \label{fig:slowdownPlot}
 \end{figure}
 
-Figure \ref{fig:benchmarkOverview} shows the runtime measurements across all datasets as scatter plot.
-Error bars depict the standard deviation of measurements.
-All measured summation algorithms have a runtime that is linear in the number of summands. For most datasets, ReproBLAS is faster than Allreduce and Allreduce is faster than binary tree summation.
-
-Figure \ref{fig:slowdownPlot} shows the exact relative slowdown of binary tree summation compared to ReproBLAS.
-While the slowdown on small datasets varies greatly (presumably due to the chaotic message count behaviour discussed in section \ref{sec:messageCount}), for larger datasets the slowdown approaches $1$, meaning binary tree summation is almost as fast as ReproBLAS.
-Figure \ref{fig:violinRokasD7} shows the exact distribution of runtimes for the largest dataset.
-
+\Cref{fig:benchmarkOverview} shows the runtime measurements across all datasets as a scatter plot.
+All measured summation algorithms have a runtime that is linear in the number of summands.
+On the shared-memory machine, Binary Tree Summation has a slowdown of less than $2$ compared to ReproBLAS (\Cref{fig:slowdownPlot}).
+On the largest dataset, Binary Tree Summation performs exceptionally well and is only $2\%$ slower than ReproBLAS.\@
+\Cref{fig:boxplotRokasD7} gives a detailed breakdown of the runtimes for this dataset.
+The runtime of the irreproducible \texttt{std::accumulate} + Allreduce variant is in the vicinity of the ReproBLAS runtime, possibly due to the missing vectorization of \texttt{std::accumulate}.
+The performance of all three accumulation modes suffers from the increased number of \glspl{pe} on the distributed-memory machine for small- and medium-sized datasets.
+Additionally, the logarithmically increasing message count of Binary Tree Summation further increases the gap to ReproBLAS.\@
 
 \begin{figure}
 \centering
-\includegraphics[scale=0.8]{figures/violinRokasD7.pdf}
-\caption{Runtime distribution for all three summation modes on the dataset \textit{rokasD7}}
-\label{fig:violinRokasD7}
+\includegraphics[scale=0.75]{figures/boxplotRokasD7.pdf}
+\caption{Runtime distribution for all three summation modes on the dataset \textit{rokasD7} ($N = 21\,410\,970, p = 256$). Lowest and highest outliers removed for each accumulation mode.}
+\label{fig:boxplotRokasD7}
 \end{figure}
 
 
 \section{Verification of Reproducibility}
 \label{sec:VerificationOfReproducibility}
-To verify the reproducibility of the results, a script calls the binary under test with a varying number of \glspl{pe}.
-It keeps track of the output and compares it to a reference value generated by \textit{i10pc138} with a single \gls{pe} ($p=1$).
 
+\begin{table}
+\centering
+\begin{tabular}{llll}
+\textbf{Dataset} & \textbf{ReproBLAS }& \textbf{Binary Tree Summation} & \texttt{std::accumulate}\textbf{ + AllReduce} \\
+multi100 & $$0.0$$ & $0.0$ & $3.6 * 10^{-12}$ \\
+rokasD1 & $0.0$ & $0.0$ & $4.5 * 10^{-6}$ \\
+rokasA8 & $0.0$ & $0.0$ & $4.5 * 10^{-8}$ \\
+fusob & $0.0$ & $0.0$ & $4.5 * 10^{-11}$ \\
+PeteD8 & $0.0$ & $0.0$ & $6.1 * 10^{-6}$ \\
+rokasD4 & $0.0$ & $0.0$ & $1.9 * 10^{-7}$ \\
+rokasA8 & $0.0$ & $0.0$ & $2.8 * 10^{-6}$ \\
+354 & $0.0$ & $0.0$ & $6.4 * 10^{-12}$ \\
+prim & $0.0$ & $0.0$ & $7.3 * 10^{-12}$
+\end{tabular}
+\caption{Interval size of the result of different runs with varying \gls{pe}-count}
+\label{table:runDeviation}
+\end{table}
+
+To verify the reproducibility of the results, we collected reference values by running the summation algorithm on a single \gls{pe}.
+We compared calculated values against the reference values while repeatedly running the program with an increasing number of \glspl{pe} ($p \in \{1, 17, \ldots, 241 \}$).
+With ReproBLAS and Binary Tree Summation no deviation from the reference value was detected for all test datasets, while values produced by Allreduce were irreproducible after adding only $1$ \gls{pe}.
+\Cref{table:runDeviation} shows the difference between the largest and smallest result collected over all values of $p$.
+For ReproBLAS and Binary Tree Summation, this value is zero, indicating that the result is independent from the number of \glspl{pe}.
+For Allreduce, the largest observed relative error was $3.9 * 10^{-13}$ (dataset \textit{rokasD1}).
+Results from ReproBLAS and Binary Tree Summation were also stable across different machines and compiler versions.\footnote{Linux 5.4.0-89-generic with GCC 9.4.0 on i10pc138, Linux 4.18.0-193.65.2.el8\_2.x86\_64 with GCC 11.2 on bwUniCluster 2.0}
 
 \section{Scaling Behaviour}
 \label{sec:ScalingBehaviour}
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.8]{figures/scaling.pdf}
+\caption{Speedup and median accumulation time of $N=21\,410\,970$ elements over $p$. Error bars depict 1st and 99th percentile.}
+\label{fig:ClusterScaling}
+\end{figure}
+
+\Cref{fig:ClusterScaling} shows the result of a strong-scaling benchmark on a distributed-memory machine.
+The speedup relative to the sequential computation levels off for $p \geq 640$ (about $33\,000$ elements per \gls{pe}) for both ReproBLAS and Binary Tree Summation.
+Between $320$ and $880$ \glspl{pe} the median accumulation time of Binary Tree Summation is smaller compared to ReproBLAS, but has a higher variance of runtimes.
