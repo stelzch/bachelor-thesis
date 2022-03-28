@@ -13,4 +13,15 @@
 \chapter{Conclusion}
 \label{ch:Conclusion}
 
-\dots
+Binary Tree Reduction offers reproducible results independent of the core-count.
+It is not limited to floating-point operations and can be extended to the general set of reduction operations.
+Its message count per \gls{pe} is bounded logarithmically by the number of elements per \gls{pe} (\Cref{eq:upperBoundLowerDistribution}).
+If the Binary Tree Reduction takes up the majority of the runtime, optimizing the data distribution for the reduction can yield better results (\Cref{sec:DataDistribution}).
+
+For floating-point summation in particular, solutions like ReproBLAS~\cite{ahrens_algorithms_2020} outperform Binary Tree Reduction and have a negligible runtime penalty compared to naive \texttt{MPI\_Allreduce} implementations.
+The slowdown of Binary Tree Reduction compared to ReproBLAS is typically less than $2$.
+
+Future work could explore additional optimizations of the Binary Tree Reduction algorithm.
+Under the assumption of a specific data distribution, $\rankFromIndex$-lookups could be replaced with a constant time algorithm.
+Furthermore, critical path analysis could provide better-performing calculation orders for outbound subtree roots.
+While \Cref{ch:Experiments} provides insight in the runtime of isolated reduction operations, additional examinations must be made to determine the runtimes of reductions which are a small part of larger workloads.
