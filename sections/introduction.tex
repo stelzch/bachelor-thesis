@@ -21,4 +21,4 @@ L_{\textrm{tree}} &= \prod_{s \in \textrm{sites}} L_s \\
 During the tree search, the log-likelihoods determine the alteration of a tree in order to further increase its likelihood.
 Therefore, the correctness of sum \eqref{eq:llh_sum} is critically important for the resulting trees.
 RAxML-NG uses floating-point numbers to represent LLH values, but floating-point arithmetic is not necessarily associative due to rounding errors~\cite{goldberg_what_1991}.
-Darriba et al.\ have shown that executing the same version of RAxML-NG with the same input data and random seed can still produce different trees by varying the number of threads, because of the different summation orders~\cite{darriba_state_2018}.
+Darriba et al.\ have shown that executing the same version of RAxML-NG with the same input data and same random seed can still produce different trees by varying the number of threads, because of the different summation orders~\cite{darriba_state_2018}.

@@ -69,10 +69,10 @@ Finally, it discards the first and last eight measurements and outputs both the 
 
 \Cref{fig:benchmarkOverview} shows the runtime measurements across all datasets as a scatter plot.
 We measure that all summation algorithms have a runtime that is linear in the number of summands (\Cref{fig:benchmarkOverview}).
-On the shared-memory machine, Binary Tree Summation we measure a slowdown of less than $2$ compared to ReproBLAS (\Cref{fig:slowdownPlot}).
+On the shared-memory machine, we measure a slowdown of less than $2$ of Binary Tree Summation compared to ReproBLAS (\Cref{fig:slowdownPlot}).
 On the largest dataset, Binary Tree Summation is only $2\,\%$ slower than ReproBLAS (\Cref{fig:boxplotRokasD7}).
 The runtime of the irreproducible \texttt{std::accumulate} + Allreduce variant differs less than $15\,\%$ from the ReproBLAS runtime, possibly due to the missing vectorization of \texttt{std::accumulate} (\Cref{fig:slowdownAllreduceReproblas}).
-The performance of all three accumulation modes suffers from the increased number of \glspl{pe} on the distributed-memory machine for small- and medium-sized datasets, as no speedup can be observed for $N < 2^{22}$.
+The performance of all three accumulation modes suffers from the increased number of \glspl{pe} on the distributed-memory machine for small- and medium-sized datasets, as we observe no speedup for $N < 2^{22}$.
 Additionally, the logarithmically increasing message count of Binary Tree Summation further increases the gap to ReproBLAS for increasing \gls{pe}-counts.\@
 
 \begin{figure}
@@ -88,7 +88,7 @@ Additionally, the logarithmically increasing message count of Binary Tree Summat
 To verify the reproducibility of the results, we ran all three summation algorithms with different core-counts in steps of 16 ($p \in \{1, 17, \ldots, 241 \}$).
 With ReproBLAS and Binary Tree Summation, we detected no deviation between results for all test datasets, while values produced by Allreduce were already  irreproducible between runs with $p=1$ and $p=17$ \glspl{pe}.
 \Cref{table:runDeviation} shows the difference between the largest and smallest result collected over all values of $p$.
-For ReproBLAS and Binary Tree Summation, this value is zero\footnote{Or at least smaller than the machine epsilon for IEEE 754 double precision floating-point numbers}, indicating that the result is independent from the number of \glspl{pe}.
+For ReproBLAS and Binary Tree Summation, this value is zero,\footnote{Or at least smaller than the machine epsilon for IEEE 754 double precision floating-point numbers} indicating that the result is independent from the number of \glspl{pe}.
 For Allreduce, the largest observed relative error was $3.9 * 10^{-13}$ (dataset \textit{rokasD1}), which could potentially cause tools like RAxML-NG to dismiss certain trees during likelihood maximization and produce different results depending on the core-count.
 Results from ReproBLAS and Binary Tree Summation were also reproducible across different machines and compiler versions.\footnote{Linux 5.4.0-89-generic with GCC 9.4.0 on i10pc138, Linux 4.18.0-193.65.2.el8\_2.x86\_64 with GCC 11.2 on bwUniCluster 2.0}
 

@@ -7,7 +7,7 @@ Let $\F$ be the set of floating-point numbers. Given
 \item a not necessarily associative binary operation $\circ: \F \times \F \rightarrow \F$
 \end{itemize}
 we want to reduce all numbers by means of $\circ$ so that the end result is bitwise-reproducible.
-A reduction algorithm is called bitwise-reproducible if multiple executions over the same set of numbers with a variable number of \glspl{pe} produce bit-per-bit the exact same results.
+A reduction algorithm is bitwise-reproducible if multiple executions over the same set of numbers with a variable number of \glspl{pe} produce bit-per-bit the exact same results.
 
 In order to correctly distribute the $N$ elements over $p$ \glspl{pe}, we need to deal with cases where $N$ is not divisible by $p$.
 Let $a := \lfloor \tfrac{N}{p} \rfloor$ be the rounded number of elements per \gls{pe}.
@@ -45,12 +45,12 @@ Because of the communication overhead, performance decreases with an increasing 
 
 \subsection{Reproducible Accumulators}
 \label{sec:Reproducible Accumulators}
-For floating-point summation in particular, Ahrens et al.\ have developed an algorithm that uses a 6-word reproducible accumulator to avoid unpredictable rounding errors.\cite{ahrens_algorithms_2020}
+For floating-point summation in particular, Ahrens et al.\ have developed an algorithm that uses a 6-word reproducible accumulator to avoid unpredictable rounding errors~\cite{ahrens_algorithms_2020}.
 After reading all the input data, the summation can occur in parallel in no particular order and still produces bitwise identical results.
 This requires around $9N$ floating-point operations and $3N$ bitwise operations.
 The Reproducible Basic Linear Algebra Subprograms (ReproBLAS) software package implements this algorithm and exposes a user-friendly API.\@
 
-Naturally, this approach is not suitable for general reduction operations, since it depends on specific properties of floating-point numbers as specified in the IEEE 754 standard \cite{noauthor_ieee_nodate-1}.
+Naturally, this approach is not suitable for general reduction operations, since it depends on specific properties of floating-point numbers as specified in the IEEE 754 standard~\cite{noauthor_ieee_nodate-1}.
 
 
 \subsection{Reduction Tree}
@@ -59,14 +59,14 @@ Naturally, this approach is not suitable for general reduction operations, since
 \begin{figure}[H]
 \centering
 \includegraphics[scale=0.7]{figures/villa_et_al_reduction_tree.pdf}
-\caption{General reduction tree (figure from Villa et al. \cite{villa_effects_2009})}
+\caption{General reduction tree (figure from Villa et al.\ \cite{villa_effects_2009})}
 \label{fig:villa_reduction_tree}
 \end{figure}
 
 
-Villa et al.\ have utilized a $K$-ary tree structure on a Cray XMT system to sum floating-point numbers reproducibly \cite{villa_effects_2009}.
-Figure \ref{fig:villa_reduction_tree} gives a schematic overview of the calculation order.
-Using parallel-prefix accumulation, they compute the sum of $N$ summands in $\log_K (N)$ steps, where $K$ determines how many numbers are accumulated sequentially in each step.
-The reproducibility stems from the fact that the reduction tree only depends on the total number of summands $N$ and the constant $K$, therefore the same calculation order is used even if the cluster size differs.
+Villa et al.\ have utilized a $K$-ary tree structure on a Cray XMT system to sum floating-point numbers reproducibly~\cite{villa_effects_2009}.
+\Cref{fig:villa_reduction_tree} gives a schematic overview of the calculation order.
+Using parallel-prefix accumulation, they compute the sum of $N$ summands in $\log_K (N)$ steps, where $K$ determines the amount of numbers the algorithm accumulates sequentially in each step.
+The reproducibility stems from the fact that the reduction tree only depends on the total number of summands $N$ and the constant $K$, therefore the algorithm uses the same calculation order if the core-count differs.
 
 The original source code is not available even after contacting the authors, therefore the exact inner workings of this algorithm and runtime comparisons are subject to speculation only.

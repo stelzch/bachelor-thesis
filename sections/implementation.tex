@@ -60,7 +60,7 @@ The global index of the first element assigned to a \gls{pe} is the so-called st
 \label{eq:startIndex}
 \end{align}
 
-This allows us to define the function $\rankFromIndex$, which computes the index of the \gls{pe} that stores the given element:
+This allows us to define the function $\rankFromIndex$, which computes the rank of the \gls{pe} that stores the given element:
 \begin{equation}
 \rankFromIndex (x) = \max \{i \in [0, p - 1] \;|\; \startIndex (i) \leq x \}
 \end{equation}
@@ -173,7 +173,7 @@ The distinctions made in Equations \eqref{eq:nodeReduceBaseCase}--\eqref{eq:node
 \draw[gray] [->] (indexB) -- (idx3);
 
 \end{tikzpicture}
-\caption{\Cref{algo:SummationAlgoPassthrough}: $x_b$ exceeds the number of elements}
+\caption{\Cref{algo:SummationAlgoPassthrough}: $x_b$ exceeds the number of elements $N = 3$}
 \label{fig:algoNoAdjacentNode}
 \end{subfigure}
 \hfill
@@ -315,7 +315,7 @@ Typically, \Cref{algo:SummationAlgo} sends multiple consecutive messages to the 
 \Cref{fig:messageBufferingTree} is a minimal example for this observation: nodes $(3,0)$ and $(4,1)$ are outbound subtree roots that \gls{pe} 1 sends to \gls{pe} 0.
 \gls{pe} 1 can avoid the additional message latency if it does not send $(3,0)$ directly, but stores it in a buffer instead.
 Then, after finishing the computation of $(4,1)$, \gls{pe} 1 can send both results to \gls{pe} 0 in a single message.
-Because \gls{pe} 0 calculates $(0,1)$ beforehand, the delayed transmission of $(3,0)$ does not impact the runtime negatively.
+As long as the communication overhead for sending a message sufficiently exceeds the time needed to sum two floating-point numbers, the delayed transmission of $(3,0)$ does not impact the runtime negatively.
 
 The current implementation utilizes a buffer with a maximum of $4$ elements per message.
 After the summation routine has computed an outbound subtree root, it places the result in the outbound message buffer.
@@ -377,14 +377,14 @@ $i \gets 0$\;
 
 \begin{table}
 \centering
+\caption{Scores for the even data distribution ($N = 504\,850$, $p=256$)}
+\label{table:EvenDistributionScores}
 \begin{tabular}{l|l|l}
 Distribution & Score & Message count \\
 \hline
 $n_i^\textrm{lower}$ & \SI{469.0}{\micro\second} & 1640 \\
 $n_i^\textrm{upper}$ & \SI{401.9}{\micro\second} & 1401
 \end{tabular}
-\caption{Scores for the even data distribution ($N = 504\,850$, $p=256$)}
-\label{table:EvenDistributionScores}
 \end{table}
 Distributing the data evenly across the \glspl{pe} ensures maximum parallelization of the computational effort, since the maximum difference in the workload of \glspl{pe} is $1$ element.
 As shown in \Cref{table:EvenDistributionScores}, distributing the elements evenly yields a score of around $\SI{400}{\micro\second}$.
@@ -407,14 +407,14 @@ N - \sum_{i=0}^{p-2} n_i^\textrm{power2} & i = p - 1
 \end{equation}
 
 \begin{table}
+\caption{Score of the $n_i^\textrm{power2}$ data distribution ($N = 504\,850$, $p=256$)}
+\label{table:Power2DistributionScore}
 \centering
 \begin{tabular}{l|l|l}
 Distribution & Score & Message count \\
 \hline
 $n_i^\textrm{power2}$ & \SI{1083.4}{\micro\second} & 256
 \end{tabular}
-\caption{Score of the $n_i^\textrm{power2}$ data distribution ($N = 504\,850$, $p=256$)}
-\label{table:Power2DistributionScore}
 \end{table}
 
 The rounding decreases the amount of messages considerably (\Cref{table:Power2DistributionScore}).
@@ -458,13 +458,13 @@ $proposedIndex = currentIndex$\;
 
 \begin{table}
 \centering
+\caption{Score of the $n_i^\textrm{optimized}$ data distribution ($N = 504\,850$, $p=256$)}
+\label{table:OptimizedDistributionScore}
 \begin{tabular}{l|l|l}
 Distribution & Score & Message count \\
 \hline
 $n_i^\textrm{optimized}$ & \SI{184.5}{\micro\second} & 621
 \end{tabular}
-\caption{Score of the $n_i^\textrm{optimized}$ data distribution ($N = 504\,850$, $p=256$)}
-\label{table:Power2DistributionScore}
 \end{table}
 
 \Cref{fig:distributionBoxplot} shows the difference in assigned elements of the even distribution and the optimized distribution with a maximum deviation of $\alpha = 0.2$.
@@ -574,13 +574,6 @@ block/.style={draw,minimum width=1.6cm, text centered,minimum height=0.8cm,font=
 \label{fig:avxSchema}
 \end{figure}
 
-\begin{figure}
-\centering
-\includegraphics[scale=0.72]{figures/benchmarkVectorization}
-\caption{Microbenchmark comparing sequential summation to AVX-2 binary tree reduction for $p=1$}
-\label{fig:benchmarkVectorization}
-\end{figure}
-
 The theoretical per-node peak of \gls{flops} increases dramatically under the utilization of \gls{simd} capabilities~\cite{dolbeau_theoretical_2018}.
 While modern compilers like the GNU C-Compiler try to automatically vectorize existing code\footnote{We confirmed manually that the relevant code sections compile to AVX machine instructions after passing the \texttt{-mavx} flag}, optimization by hand can yield better results.
 
@@ -617,3 +610,10 @@ If the remaining number of elements in the current iteration is not divisible by
 Since only one \gls{pe} executes this microbenchmark, no communication takes place and all runtime costs are purely computational.
 For smaller workloads ($N < 64$), the overhead introduced by the vectorization is larger than the performance gains, but for larger workloads the AVX-2 implementation outperforms \texttt{std::accumulate} by a factor of more than $2$.
 \texttt{std::accumulate} guarantees the summation order to be left-to-right and therefore can not be vectorized.
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.72]{figures/benchmarkVectorization}
+\caption{Microbenchmark comparing sequential summation to AVX-2 binary tree reduction for $p=1$}
+\label{fig:benchmarkVectorization}
+\end{figure}

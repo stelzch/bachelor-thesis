@@ -11,4 +11,9 @@
 %% Version 1.3.5, 2020-06-26
 
 \Abstract
-English abstract.
+Because of rounding errors, parallel floating-point summation can produce different results if the core-count is varied.
+For tools like RAxML-NG~\cite{kozlov_raxml-ng_2019-1}, this means that results may be irreproducible on clusters with different core-counts.
+We present the Binary Tree Summation algorithm, which follows a distributed binary tree scheme that keeps the calculation order fixed and independent of the core-count $p$.
+A naive implementation requires up to $(p - 1) * (\log_2 \big(\frac{N-1}{p} \big) + 1)$ messages to sum $N$ floating-point numbers.
+To reduce the message count, we introduce a message buffer and optimize data distribution across the cores.
+We find that for $p=256$, Binary Tree Summation has a slowdown of less than $2$ compared to a naive, irreproducible solution.

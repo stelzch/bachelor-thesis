@@ -360,6 +360,7 @@ if __name__ == '__main__':
         violin_plot(last_complete, f"%{dataset}%").savefig(f"figures/violin{dataset.capitalize()}.pdf")
     slowdown_plot(last_complete).savefig("figures/slowdownPlot.pdf")
     slowdown_plot(last_complete, faster_mode='allreduce', slower_mode='reproblas').savefig("figures/slowdownAllreduceReproblas.pdf")
+    slowdown_plot(last_complete, faster_mode='allreduce', slower_mode='tree').savefig("figures/slowdownAllreduceTree.pdf")
     distribution_histogram(96, last_complete).savefig("figures/distribution_experiment.pdf")
     singlethread_tree_reduction(5).savefig("figures/benchmarkVectorization.pdf")
 
