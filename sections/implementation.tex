@@ -4,7 +4,7 @@
 In this chapter, we deduce the necessary equations to implement the reduction algorithm and present multiple optimizations.
 We focus on summation, the reduction operator $\reduce$ will be floating-point addition.
 While the recursive formula given in \Cref{eq:nodeReduceReduction} already defines a reduction algorithm, its implementation in imperative languages would heavily rely on the call stack to store intermediate results.
-In practice, performing the calculations in opposite direction, from leaf nodes to the root, yields faster runtimes.\footnote{For $N=2^{27}$ elements on $p=1$ \gls{pe}, we observe a $4.9$ speedup of the recursive reduction (Microbenchmark ID 5).}
+In practice, reducing iteratively from leaf nodes to the root yields faster runtimes.\footnote{For $N=2^{27}$ elements on $p=1$ \gls{pe}, we observe a $4.9$ speedup of the recursive reduction (Microbenchmark ID 5).}
 
 The binary representation of element indices has $\numLevels$ bits.
 If we order them from most- to least-significant and interpret them as a series of decisions, where $0$ means \enquote{go up} and $1$ means \enquote{go right and up}, each index encodes a path from the tree root to the corresponding leaf node:
@@ -576,7 +576,7 @@ block/.style={draw,minimum width=1.6cm, text centered,minimum height=0.8cm,font=
 
 \begin{figure}
 \centering
-\includegraphics[scale=0.9]{figures/benchmarkVectorization}
+\includegraphics[scale=0.72]{figures/benchmarkVectorization}
 \caption{Microbenchmark comparing sequential summation to AVX-2 binary tree reduction for $p=1$}
 \label{fig:benchmarkVectorization}
 \end{figure}

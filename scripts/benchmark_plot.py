@@ -78,7 +78,7 @@ def scatter_plot(run_id):
             "include": True
         }
     }
-    f = plt.figure()
+    f = plt.figure(figsize=(4.5,5.0))
     ax = f.subplots(1)
     ax.set_ylabel('Accumulate Time')
     ax.set_xlabel('number of summands')
@@ -124,6 +124,7 @@ def scatter_plot(run_id):
     #ax.set_xlim(left=0)
     #ax.set_ylim(bottom=0)
 
+    f.tight_layout()
     return f
 
 def violin_plot(run_id, datasetQuery):
@@ -175,7 +176,7 @@ def violin_plot(run_id, datasetQuery):
     plt.subplots_adjust(left=0.15, bottom=0.0 + margin_y, right=0.98, top=1.0 - margin_y)
     return f
 
-def slowdown_plot(run_id):
+def slowdown_plot(run_id, faster_mode='reproblas', slower_mode='tree'):
     plot_data = fetch_durations(run_id)
     formatter0 = EngFormatter(places=2)
 
@@ -186,13 +187,13 @@ def slowdown_plot(run_id):
     for p in plot_data:
         n = p[0]['n']
         mode = lambda mode: (lambda x: x['mode'] == mode)
-        tree_data = next(filter(mode('tree'), p))
-        reproblas_data = next(filter(mode('reproblas'), p))
+        slow_data = next(filter(mode(slower_mode), p))
+        fast_data = next(filter(mode(faster_mode), p))
 
-        tree_median = median(tree_data['durations'])
-        reproblas_median = median(reproblas_data['durations'])
+        slow_median = median(slow_data['durations'])
+        fast_median = median(fast_data['durations'])
 
-        slowdown = tree_median / reproblas_median
+        slowdown = slow_median / fast_median
         X.append(n)
         slowdowns.append(slowdown)
 
@@ -203,6 +204,7 @@ def slowdown_plot(run_id):
     ax.set_xlabel("Number of summands")
 
     ax.scatter(X, slowdowns)
+    ax.axhline(y=1.0, linestyle="--", color="gray")
 
     return f
 
@@ -214,7 +216,7 @@ def boxplot_comparison(result_ids, labels):
         print(len(results))
         assert(len(results) == 100 - 16 - 2) # 16 results removed by RADTree, outermost outliers removed here
         durations.append(results)
-    f, ax = plt.subplots(1)
+    f, ax = plt.subplots(1,figsize=(6.4,2.0))
     formatter0 = EngFormatter(unit='s')
     ax.xaxis.set_major_formatter(formatter0)
     ax.set_xlabel('Accumulation Time')
@@ -312,7 +314,7 @@ def singlethread_tree_reduction(microbenchmark_run_id):
     return f
 
 def plot_distributions(optimized,even):
-    f, ax = plt.subplots(1, figsize=(6,3))
+    f, ax = plt.subplots(1, figsize=(6,2))
     ax.boxplot([optimized,even],
             labels=['Optimized', 'Even'],
             vert=False)
@@ -357,6 +359,7 @@ if __name__ == '__main__':
     for dataset in ["354", "rokasA4", "rokasA8", "PeteD8", "rokasD1", "rokasD4", "rokasD7", "fusob", "multi100", "prim"]:
         violin_plot(last_complete, f"%{dataset}%").savefig(f"figures/violin{dataset.capitalize()}.pdf")
     slowdown_plot(last_complete).savefig("figures/slowdownPlot.pdf")
+    slowdown_plot(last_complete, faster_mode='allreduce', slower_mode='reproblas').savefig("figures/slowdownAllreduceReproblas.pdf")
     distribution_histogram(96, last_complete).savefig("figures/distribution_experiment.pdf")
     singlethread_tree_reduction(5).savefig("figures/benchmarkVectorization.pdf")
 

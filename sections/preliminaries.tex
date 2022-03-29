@@ -40,17 +40,15 @@ x_0 \circ x_1 \circ x_2 \circ \ldots  \circ x_{N-1} = ((x_0 \circ x_1) \circ x_2
 
 While simple in implementation, this approach suffers from one major drawback:
 It does not benefit from any parallelization whatsoever.
-Through the communication overhead, performance decreases with an increasing number of \glspl{pe}.
+Because of the communication overhead, performance decreases with an increasing number of \glspl{pe}.
 
 
 \subsection{Reproducible Accumulators}
 \label{sec:Reproducible Accumulators}
-For floating-point summation in particular, Ahrens et al.\ have developed an algorithm that uses a 6-word accumulator
-to avoid unpredictable rounding errors \cite{ahrens_algorithms_2020}. After a read-only pass over the input data,
-the summation can occur in parallel in no particular order and still produces bitwise identical results.
+For floating-point summation in particular, Ahrens et al.\ have developed an algorithm that uses a 6-word reproducible accumulator to avoid unpredictable rounding errors.\cite{ahrens_algorithms_2020}
+After reading all the input data, the summation can occur in parallel in no particular order and still produces bitwise identical results.
 This requires around $9N$ floating-point operations and $3N$ bitwise operations.
-The Reproducible Basic Linear Algebra Subprograms (ReproBLAS) software package implements this algorithm and
-exposes a user-friendly API.\@
+The Reproducible Basic Linear Algebra Subprograms (ReproBLAS) software package implements this algorithm and exposes a user-friendly API.\@
 
 Naturally, this approach is not suitable for general reduction operations, since it depends on specific properties of floating-point numbers as specified in the IEEE 754 standard \cite{noauthor_ieee_nodate-1}.
 

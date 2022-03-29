@@ -181,7 +181,7 @@ The functions display large differences in message counts for small differences 
 The lower bound of the message count is $p - 1$, since all \glspl{pe} with a rank larger than $0$ must have at least one node that has a \gls{pe}-intersecting parent node.
 For the $n_i^\textrm{lower}$-distribution, the message count attains the global minima at $N = 2^i * p$, where $i \in \mathbb{N}$.
 In this case, each \gls{pe} holds an independent subtree of size $2^i$ whose root node is part of a \gls{pe}-intersecting node.
-If we increase our dataset size to $N+1$, applying the $n_i^\textrm{lower}$ distribution will shift all \gls{pe}-boundaries one step in $x$-direction because of the additional element on the root \gls{pe}.
+If we increase our dataset size to $N+1$, applying the $n_i^\textrm{lower}$ distribution will shift all \gls{pe}-boundaries one step in $x$-direction because of the additional element on the root \gls{pe} (\Cref{fig:messageCountShifting}).
 The subtree root nodes are now on different \glspl{pe} than their children, producing $i + 1$ \gls{pe}-intersecting nodes on all \glspl{pe} except the first one, as illustrated in \Cref{fig:messageCountShifting}.
 Therefore, the message count for $N = 2^i * p + 1$ is 
 \begin{equation}
@@ -205,3 +205,4 @@ M(N) = (p - 1) * (\log_2 \Big( \frac{N - 1}{p} \Big) + 1)
 Under the assumption that the number of \glspl{pe} is constant, the message count $M$ therefore is in $O(\log(N))$.
 Note that for the $n_i^\textrm{upper}$ distribution in \Cref{fig:messageCount256Upper}, the corresponding spikes are much less pronounced since the subtree shifting described above does not occur when adding only one element.
 Because of the lower upper bound, implementations should therefore prefer the $n_i^\textrm{upper}$ distribution over the $n_i^\textrm{lower}$ distribution
+

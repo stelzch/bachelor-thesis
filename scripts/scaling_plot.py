@@ -58,7 +58,7 @@ def fetch_data(benchmark_id, mode):
 RX, RY, N, reproblasT, errReproblasH, errReproblasL = fetch_data(benchmark_id, 'reproblas')
 TX, TY, _, treeT, errTreeH, errTreeL = fetch_data(benchmark_id, 'tree')
     
-f, axs = plt.subplots(2, sharex=True, figsize=(6,7))
+f, axs = plt.subplots(ncols=2, figsize=(9,4))
 
 ax = axs[0]
 
@@ -66,8 +66,8 @@ ax.set_ylabel(("Scaled " if weak_scaling else "") + "Speedup")
 #ax.set_title(f"{description} of N={N} elements")
 
 ax.plot([0,max(RX)], [0,max(RX)], "--", color='gray')
-ax.scatter(RX, RY, c='cyan', label='ReproBLAS')
-ax.scatter(RX, TY, c='red', label='Binary Tree Summation')
+ax.scatter(RX, RY, s=[6.0] * len(RX), c='cyan', label='ReproBLAS')
+ax.scatter(RX, TY, s=[6.0] * len(RX), c='red', label='Binary Tree Summation')
 
 ax.legend(loc='upper left')
 
@@ -75,14 +75,15 @@ ax = axs[1]
 formatter0 = EngFormatter(unit='s', places=0)
 ax.set_yscale('log')
 ax.grid(axis='y', which='both', linewidth=0.2)
-ax.set_xlabel("PEs")
 ax.set_ylabel("Median accumulation time")
 ax.errorbar(RX[1:], reproblasT[1:], yerr=(errReproblasL, errReproblasH), fmt='.c', label='ReproBLAS', capsize=3.0)
-ax.errorbar(RX[1:], treeT[1:], yerr=(errTreeL, errTreeH), fmt='.r', label='Tree', capsize=3.0)
+ax.errorbar(RX[1:], treeT[1:], yerr=(errTreeL, errTreeH), fmt='.r', label='Binary Tree Summation', capsize=3.0)
 #ax.scatter(RX, treeT, c='red', label='Tree')
 ax.yaxis.set_major_formatter(formatter0)
-ax.set_xticks([1] + list(range(RX[1],max(RX),80)) + [max(RX)], rotation=30)
-ax.tick_params(axis='x', labelrotation=45)
+for ax in axs:
+    ax.set_xlabel("PEs")
+    ax.set_xticks([1] + list(range(RX[1],max(RX),80)) + [max(RX)], rotation=30)
+    ax.tick_params(axis='x', labelrotation=45)
 print(RX)
 #ax.set_ylim(top=950e-6,bottom=0)
 ax.legend(loc='upper right')
