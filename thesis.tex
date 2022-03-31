@@ -15,7 +15,7 @@
 %% Available page modes: oneside, twoside
 %% Available languages: english, ngerman
 %% Available modes: draft, final (see README)
-\documentclass[oneside, english]{sdqthesis}
+\documentclass[twoside, english]{sdqthesis}
 
 %% ---------------------------------
 %% | Information about the thesis  |
@@ -86,11 +86,12 @@
 \usepackage{siunitx}
 
 \makeglossaries
-\newacronym{pe}{PE}{processing element}
-\newacronym{simd}{SIMD}{single instruction multiple data}
-\newacronym{avx}{AVX}{advanced vector extensions}
-\newacronym{mpi}{MPI}{message passing interface}
-\newacronym{flops}{FLOPS}{floating-point operations per second}
+\newacronym{pe}{PE}{Processing Element}
+\newacronym{simd}{SIMD}{Single Instruction Multiple Data}
+\newacronym{avx}{AVX}{Advanced Vector Extensions}
+\newacronym{mpi}{MPI}{Message Passing Interface}
+\newacronym{flops}{FLOPS}{Floating-Point Operations per Second}
+\newacronym{psllh}{PSLLH}{Per-Site Log-Likelihood}
 
 \directlua{dofile("scripts/tree.lua")}
 
