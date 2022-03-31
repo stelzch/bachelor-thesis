@@ -11,7 +11,10 @@
 %% Version 1.3.5, 2020-06-26
 
 \chapter{Acknowledgements}
-The author acknowledges support by the state of Baden-Württemberg through bwHPC.
+This work was performed on the computational resource bwUniCluster funded by the Ministry of Science, Research and the Arts Baden-Württemberg and the Universities of the State of Baden-Württemberg, Germany, within the framework program bwHPC.
+This project has received funding from the European Research Council (ERC) under the European Union’s Horizon 2020 research and innovation program (grant agreement No. 882500).
+
+\includegraphics[scale=0.1]{logos/erc.png}
 
 %\chapter{Glossary}
 \printglossary[type=\acronymtype]
@@ -27,7 +30,7 @@ The author acknowledges support by the state of Baden-Württemberg through bwHPC
 \begin{figure}[H]
 \centering
 \includegraphics[scale=0.8]{figures/bufferSizes.pdf}
-\caption{Accumulation runtime with different subtree sizes used as flushing criterion}
+\caption{Accumulation runtime with different subtree sizes used as flushing criterion.}
 \label{fig:bufferFlushingCriterion}
 \end{figure}
 
@@ -55,21 +58,21 @@ The author acknowledges support by the state of Baden-Württemberg through bwHPC
 \includegraphics[scale=\mScale]{figures/violinPeteD8.pdf}
 \includegraphics[scale=\mScale]{figures/violinRokasA8.pdf}
 
-\caption{Runtime distribution for all datasets with $p=256$ \glspl{pe}}
+\caption{Runtime distribution for all datasets with $p=256$ \glspl{pe}.}
 
 \end{figure}
 
 \begin{figure}
 \centering
 \includegraphics[scale=\mScale]{figures/slowdownAllreduceReproblas.pdf}
-\caption{Slowdown of ReproBLAS compared to Allreduce ($p = 256$)}
+\caption{Slowdown of ReproBLAS compared to Allreduce ($p = 256$).}
 \label{fig:slowdownAllreduceReproblas}
 \end{figure}
 
 \begin{figure}
 \centering
 \includegraphics[scale=\mScale]{figures/slowdownAllreduceTree.pdf}
-\caption{Slowdown of Binary Tree Summation compared to Allreduce ($p = 256$)}
+\caption{Slowdown of Binary Tree Summation compared to Allreduce ($p = 256$).}
 \label{fig:slowdownAllreduceTree}
 \end{figure}
 
@@ -103,7 +106,7 @@ The author acknowledges support by the state of Baden-Württemberg through bwHPC
 \node (PE\x) at (1.5+4*\x,1) {\gls{pe} \x};
 \end{tikzpicture}
 
-\caption{Optimal distribution of $N=2^2*p$ elements over $p=4$ \glspl{pe}}
+\caption{Optimal distribution of $N=2^2*p$ elements over $p=4$ \glspl{pe}.}
 \label{fig:messageCountShiftingOptimal}
 \end{subfigure}
 
@@ -133,11 +136,11 @@ The author acknowledges support by the state of Baden-Württemberg through bwHPC
 \foreach \x in {1,2,3}
 \node (PE\x) at (2.5+4*\x,1) {\gls{pe} \x};
 \end{tikzpicture}
-\caption{Worst-case distribution of $N=2^2*p+1$ elements over $p=4$ \glspl{pe}}
+\caption{Worst-case distribution of $N=2^2*p+1$ elements over $p=4$ \glspl{pe}.}
 \label{fig:messageCountShiftingWorstCase}
 \end{subfigure}
 
-\caption{Illustration of the shifting behaviour in the $n_i^\textrm{lower}$-distribution that produces maximal message counts}
+\caption{Illustration of the shifting behaviour in the $n_i^\textrm{lower}$-distribution that produces maximal message counts.}
 \label{fig:messageCountShifting}
 \end{figure}
 

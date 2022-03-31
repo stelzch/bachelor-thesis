@@ -4,7 +4,7 @@
 In this chapter, we deduce the necessary equations to implement the reduction algorithm and present multiple optimizations.
 We focus on summation, the reduction operator $\reduce$ will be floating-point addition.
 While the recursive formula given in \Cref{eq:nodeReduceReduction} already defines a reduction algorithm, its implementation in imperative languages would heavily rely on the call stack to store intermediate results.
-In practice, reducing iteratively from leaf nodes to the root yields faster runtimes.\footnote{For $N=2^{27}$ elements on $p=1$ \gls{pe}, we observe a $4.9$ speedup of the recursive reduction (Microbenchmark ID 5).}
+In practice, reducing iteratively from leaf nodes to the root yields faster runtimes.\footnote{For $N=2^{27}$ elements on $p=1$ \gls{pe}, we observe a $4.9$ speedup over the recursive reduction (Microbenchmark ID 5).}
 
 The binary representation of element indices has $\numLevels$ bits.
 If we order them from most- to least-significant and interpret them as a series of decisions, where $0$ means \enquote{go up} and $1$ means \enquote{go right and up}, each index encodes a path from the tree root to the corresponding leaf node:
@@ -35,13 +35,13 @@ If we order them from most- to least-significant and interpret them as a series 
 
 \node at (10,-2) {$6_{10} = 0110_2$};
 \end{tikzpicture}
-\caption{Example path for index $6$ with $N = 9$}
+\caption{Example path for index $6$ with $N = 9$.}
 \label{fig:indexTreePath}
 \end{figure}
 
 For any given $x$-coordinate $x > 0$, the \textbf{maximum $y$-coordinate} $\max_y(x)$ is equal to the number of trailing zeros of $x$, i.e.\ the zero-indexed position of the least-significant bit set in $x$.
 We denote this expression as $\ffs (x) - 1$, where $\ffs$ is short for \enquote{find first bit set}.
-The path representation explains why the equality holds: the least-significant bit set is the last time the $x$-coordinate changes along the path from the root, since all following bits are zero and encode the decision \enquote{go up}.
+The path representation offers intuition on why the equality holds: the least-significant bit set is the last time the $x$-coordinate changes along the path from the root, since all following bits are zero and encode the decision \enquote{go up}.
 
 To find the $x$-coordinate of the \textbf{parent node} of an inner node $(x, \max_y(x))$, we replace the last (least-significant) \enquote{go right and up} decision with \enquote{go up}. 
 Numerically, this is equivalent to cancelling the least-significant bit of $x$, which can be efficiently calculated using the bitwise AND-operation $'\BitAnd'$:
@@ -108,7 +108,7 @@ $endIndex \gets startIndex + n_{\textrm{rank}}$\;
 			}
 			\uElseIf{$\rankFromIndex (x_b) \neq rank$}{
 				\tcp{\gls{pe}-intersecting node, fetch over \gls{mpi}}
-				$b \gets \textrm{receive}\ (x_b, \max_y(x_b))$\;\label{algo:SummationAlgoRankIntersectingNode}
+				$b \gets \textrm{receive}\ (x_b, \max_y(x_b)) \textrm{ from } \rankFromIndex (x_b)$\;\label{algo:SummationAlgoRankIntersectingNode}
 				$(x,y) \gets a + b$\;
 			}
 			\Else{
@@ -119,7 +119,7 @@ $endIndex \gets startIndex + n_{\textrm{rank}}$\;
 		}
 	}
 	\If{$rank \neq 0$}{
-		$\textrm{send } (i, \max_y(i))$\;
+		$\textrm{send } (i, \max_y(i)) \textrm{ to } \rankFromIndex(parent(i))$\;
 	}
 }
 \end{algorithm}
@@ -139,6 +139,45 @@ The distinctions made in Equations \eqref{eq:nodeReduceBaseCase}--\eqref{eq:node
 \centering
 \newcommand{\labelDistance}{1.3}
 
+% simple reduction
+\begin{subfigure}{0.32\textwidth}
+\centering
+\begin{tikzpicture}
+\newcommand{\heightFactor}{0.7}
+\newcommand{\treeN}{3}
+\newcommand{\subtreeHeight}[2]{\directlua{tex.write(subtree_height(#1,#2))}}
+\newcommand{\parentIdx}[1]{\directlua{tex.write(parent(#1))}}
+\foreach \x in {0,...,\treeN} {
+	\node [anchor=south] (idx\x{}) at (\x{},0) {\x};
+	
+	\draw (\x{},0)
+		-- (\x{},-\heightFactor * \subtreeHeight{\x}{\treeN}-\heightFactor)
+		-- (\parentIdx{\x},-\heightFactor * \subtreeHeight{\x}{\treeN}-\heightFactor);
+}
+
+% marker on currently processed node
+\fill[fill=red] (0,-1 * \heightFactor) circle [radius=2pt];
+\draw [red,semithick] (0, -1 * \heightFactor) -- (idx0{});
+\draw [red,semithick] (0, -1 * \heightFactor) -- ++(1,0) -- (idx1{});
+
+% x_a marker
+\node (indexA) at (0,\labelDistance) {$x_a$};
+\draw [->] (indexA) -- (idx0{});
+
+% x_b marker
+\node (indexB) at (1,\labelDistance) {$x_b$};
+\draw [->] (indexB) -- (idx1{});
+
+% PE boundaries
+\draw [very thick, dashed, rounded corners, teal] (-0.5,0.5)  rectangle (1.4,-1.7);
+\draw [very thick, dashed, rounded corners, olive]  (1.6, 0.5) rectangle (3.4,-1.7);
+
+\end{tikzpicture}
+
+\caption{\Cref{algo:SummationAlgoInnerNode}: simple summation of inner nodes}
+\label{fig:algoInnerNode}
+\end{subfigure}
+\hfill
 % Out-of-bounds x_b
 \begin{subfigure}{0.32\textwidth}
 \centering
@@ -217,46 +256,8 @@ The distinctions made in Equations \eqref{eq:nodeReduceBaseCase}--\eqref{eq:node
 \caption{\Cref{algo:SummationAlgoRankIntersectingNode}: $x_a$ and $x_b$ point to elements located on different \glspl{pe}}
 \label{fig:algoRankIntersecting}
 \end{subfigure}
-\hfill
-% simple reduction
-\begin{subfigure}{0.32\textwidth}
-\centering
-\begin{tikzpicture}
-\newcommand{\heightFactor}{0.7}
-\newcommand{\treeN}{3}
-\newcommand{\subtreeHeight}[2]{\directlua{tex.write(subtree_height(#1,#2))}}
-\newcommand{\parentIdx}[1]{\directlua{tex.write(parent(#1))}}
-\foreach \x in {0,...,\treeN} {
-	\node [anchor=south] (idx\x{}) at (\x{},0) {\x};
-	
-	\draw (\x{},0)
-		-- (\x{},-\heightFactor * \subtreeHeight{\x}{\treeN}-\heightFactor)
-		-- (\parentIdx{\x},-\heightFactor * \subtreeHeight{\x}{\treeN}-\heightFactor);
-}
 
-% marker on currently processed node
-\fill[fill=red] (0,-1 * \heightFactor) circle [radius=2pt];
-\draw [red,semithick] (0, -1 * \heightFactor) -- (idx0{});
-\draw [red,semithick] (0, -1 * \heightFactor) -- ++(1,0) -- (idx1{});
-
-% x_a marker
-\node (indexA) at (0,\labelDistance) {$x_a$};
-\draw [->] (indexA) -- (idx0{});
-
-% x_b marker
-\node (indexB) at (1,\labelDistance) {$x_b$};
-\draw [->] (indexB) -- (idx1{});
-
-% PE boundaries
-\draw [very thick, dashed, rounded corners, teal] (-0.5,0.5)  rectangle (1.4,-1.7);
-\draw [very thick, dashed, rounded corners, olive]  (1.6, 0.5) rectangle (3.4,-1.7);
-
-\end{tikzpicture}
-
-\caption{\Cref{algo:SummationAlgoInnerNode}: simple summation of inner nodes}
-\label{fig:algoInnerNode}
-\end{subfigure}
-\caption{The three distinctions in the inner loop of \Cref{algo:SummationAlgo}}
+\caption{The three distinctions in the inner loop of \Cref{algo:SummationAlgo}.}
 \label{fig:algorithmCaseDistinction}
 \end{figure}
 
@@ -307,7 +308,7 @@ Vectorizing the additions (\Cref{sec:Vectorization}) yields the largest performa
 
 
 \end{tikzpicture}
-\caption{Distributed tree with $N=6$ nodes and $p=2$ \glspl{pe}}
+\caption{Distributed tree with $N=6$ nodes and $p=2$ \glspl{pe}.}
 \label{fig:messageBufferingTree}
 \end{figure}
 
@@ -377,7 +378,7 @@ $i \gets 0$\;
 
 \begin{table}
 \centering
-\caption{Scores for the even data distribution ($N = 504\,850$, $p=256$)}
+\caption{Scores for the even data distribution ($N = 504\,850$, $p=256$).}
 \label{table:EvenDistributionScores}
 \begin{tabular}{l|l|l}
 Distribution & Score & Message count \\
@@ -407,7 +408,7 @@ N - \sum_{i=0}^{p-2} n_i^\textrm{power2} & i = p - 1
 \end{equation}
 
 \begin{table}
-\caption{Score of the $n_i^\textrm{power2}$ data distribution ($N = 504\,850$, $p=256$)}
+\caption{Score of the $n_i^\textrm{power2}$ data distribution ($N = 504\,850$, $p=256$).}
 \label{table:Power2DistributionScore}
 \centering
 \begin{tabular}{l|l|l}
@@ -420,7 +421,7 @@ $n_i^\textrm{power2}$ & \SI{1083.4}{\micro\second} & 256
 The rounding decreases the amount of messages considerably (\Cref{table:Power2DistributionScore}).
 With our test dataset, the message count is in the vicinity of the lower bound of $p - 1$, a $80\%$ reduction compared to the even distribution.
 This comes at the cost of an imbalanced element distribution, the \gls{pe} with the highest rank, which stores the remaining elements, contains about half the elements.
-The score function penalizes the inefficient parallelization with its the second term, causing the score to be $2.7\times$ higher compared to the even distribution.
+The score function penalizes the inefficient parallelization with the second term, causing the score to be $2.7\times$ higher compared to the even distribution.
 
 \subsubsection{Optimized-Index Distribution}
 As seen in \Cref{sec:roundDownPower2Distribution}, unbounded distribution optimization yields small message counts at the expense of computational imbalance.
@@ -458,7 +459,7 @@ $proposedIndex = currentIndex$\;
 
 \begin{table}
 \centering
-\caption{Score of the $n_i^\textrm{optimized}$ data distribution ($N = 504\,850$, $p=256$)}
+\caption{Score of the $n_i^\textrm{optimized}$ data distribution ($N = 504\,850$, $p=256$).}
 \label{table:OptimizedDistributionScore}
 \begin{tabular}{l|l|l}
 Distribution & Score & Message count \\
@@ -476,7 +477,7 @@ The runtime benefit of an optimized data distribution is visible, with optimized
 \begin{figure}
 \centering
 \includegraphics[scale=0.75]{figures/distribution_experiment}
-\caption{Runtime comparison of even vs.\ optimized data distribution}
+\caption{Runtime comparison of even vs.\ optimized data distribution.}
 \label{fig:distribution_runtimes}
 \end{figure}
 
@@ -501,8 +502,8 @@ Nonetheless, it provides a runtime model accurate enough so that distributions w
 
 \begin{figure}
 \centering
-\includegraphics[scale=0.55]{figures/microbenchmark_rank_from_index.eps}
-\caption{Microbenchmark comparison of unoptimized and optimized $\rankFromIndex$ function}
+\includegraphics[scale=0.65]{figures/microbenchmark_rank_from_index.eps}
+\caption{Microbenchmark comparison of unoptimized and optimized $\rankFromIndex$ function.}
 \label{fig:microbenchmarkRankFromIndex}
 
 \end{figure}
@@ -513,7 +514,7 @@ This function maps the binary tree structure to the underlying computing topolog
 The initial implementation used a loop to find the first entry in the \textit{startIndices} array which numerically exceeds the input index.
 The runtime of this algorithm is $O(p)$.
 Microbenchmarks revealed the linearly increasing runtime and the need for optimization (see \Cref{fig:microbenchmarkRankFromIndex}).
-The currently implemented version uses a map (\texttt{std::map}) to scan for the start index, which yields a runtime in $O(\log(p))$.
+The currently implemented version uses a red-black tree (\texttt{std::map}) to scan for the start index, which yields a runtime in $O(\log(p))$.
 
 For $p=256$ \glspl{pe}, a single call to $\rankFromIndex$ takes about \SI{620}{\micro\second}.
 With $N = 1\,327\,505$ elements, \Cref{algo:SummationAlgo} calls $\rankFromIndex$ $1913$ times, about $7$ times per \gls{pe}.
@@ -570,7 +571,7 @@ block/.style={draw,minimum width=1.6cm, text centered,minimum height=0.8cm,font=
 \node[right=0.4cm of {0,-8}](op5) {$\_mm\_hadd\_pd$};
 
 \end{tikzpicture}
-\caption{Register content during AVX-2 subtree summation}
+\caption{Register content during AVX-2 subtree summation.}
 \label{fig:avxSchema}
 \end{figure}
 
@@ -584,7 +585,7 @@ AVX-2 registers are $256$ bits wide and can therefore store four double precisio
 Because AVX-2 instructions manipulate data within 128-bit lanes, it is necessary to extract the upper 128-bit after the first horizontal add in order to follow the correct summation order.
 \Cref{fig:avxSchema} displays the register contents over time.
 \begin{algorithm}
-\caption{8-tree summation with AVX-2 instructions}
+\caption{8-tree summation with AVX-2 instructions.}
 \label{algo:AVXTreeAccumulation}
 \DontPrintSemicolon
 \SetAlgoLined
@@ -608,12 +609,13 @@ Our implementation uses \Cref{algo:AVXTreeAccumulation} as a subroutine inside \
 If the remaining number of elements in the current iteration is not divisible by eight, the algorithm processes the remaining elements using non-vectorized instructions.
 \Cref{fig:benchmarkVectorization} compares the runtime of three accumulation algorithms: the initial recursive implementation of binary tree reduction, the vectorized AVX-2 implementation and the \texttt{std::accumulate} routine from the C++ standard library.
 Since only one \gls{pe} executes this microbenchmark, no communication takes place and all runtime costs are purely computational.
-For smaller workloads ($N < 64$), the overhead introduced by the vectorization is larger than the performance gains, but for larger workloads the AVX-2 implementation outperforms \texttt{std::accumulate} by a factor of more than $2$.
 \texttt{std::accumulate} guarantees the summation order to be left-to-right and therefore can not be vectorized.
+For smaller workloads ($N < 64$), the overhead introduced by the vectorization is larger than the performance gains, but for larger workloads the AVX-2 implementation outperforms \texttt{std::accumulate} by a factor of more than $2$.
+For small inputs, it can therefore be beneficial to switch to \texttt{std::accumulate}.
 
 \begin{figure}
 \centering
 \includegraphics[scale=0.72]{figures/benchmarkVectorization}
-\caption{Microbenchmark comparing sequential summation to AVX-2 binary tree reduction for $p=1$}
+\caption{Microbenchmark comparing sequential summation to AVX-2 binary tree reduction for $p=1$.}
 \label{fig:benchmarkVectorization}
 \end{figure}

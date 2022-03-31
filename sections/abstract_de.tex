@@ -10,5 +10,10 @@
 %%
 %% Version 1.3.5, 2020-06-26
 
-%\Abstract
-%Deutsche Zusammenfassung
+\Abstract
+Die Addition von Gleitkommazahlen kann aufgrund von Rundungsfehlern bei unterschiedlicher Prozessorenanzahl zu unterschiedlichen Ergebnissen führen.
+Für manche Algorithmen wie RAxML-NG~\cite{kozlov_raxml-ng_2019} oder Greedy-Algorithmen kann dies den Verlust der Reproduzierbarkeit bei unterschiedlicher Prozessorenanzahl bedeuten.
+Wir stellen einen Reduktionsalgorithmus vor der nach dem Schema eines verteilten Binärbaums vorgeht, wodurch die Ausführungsreihenfolge unabhängig von der Prozessorenanzahl $p$ bleibt.
+Eine naive Implementierung muss bis zu $(p - 1) * (\log_2 (\tfrac{N-1}{p}) + 1)$ Nachrichten senden um $N$ Gleitkommazahlen zu addieren.
+Um die Nachrichtenanzahl zu senken führen wir einen Nachrichtenpuffer ein und optimieren die Datenverteilung über die Prozessoren.
+Wir stellen fest, dass für $p=256$ Prozessoren der Binärbaum-Reduktionsalgorithmus weniger als $2$-mal langsamer ist als ein naiver, unreproduzierbarer Algorithmus.

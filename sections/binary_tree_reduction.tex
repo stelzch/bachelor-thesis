@@ -55,7 +55,7 @@
 \label{fig:coordinateExample}
 \end{subfigure}
 
-\caption{Example reduction tree for $N=3$}
+\caption{Example reduction tree for $N=3$.}
 \label{fig:reductionAndCoordinateExample}
 \end{figure}
 
@@ -74,7 +74,7 @@ To obtain the coordinates of inner nodes, we simply take over the $x$-coordinate
 \Cref{fig:coordinateExample} shows coordinates for all nodes in a binary tree with $N = 3$ leaf nodes.
 An element has index $i$ if its corresponding leaf node has the coordinates $(i,0)$.
 
-The distance in $x$-direction between the child nodes of inner nodes doubles with each level, thus for an inner node with $y$-coordinate $y$ the distance is equal to $2^{y-1}$.
+The absolute difference of $x$-coordinates of the child nodes of inner nodes doubles with each level, thus for an inner node with $y$-coordinate $y$ the absolute difference is equal to $2^{y-1}$.
 By differentiating three cases, we define a recursive reduction function that adheres to the above tree reduction scheme:
 
 \begin{numcases}{\reduceFunc (x,y) =}
@@ -83,13 +83,13 @@ By differentiating three cases, we define a recursive reduction function that ad
 \underbrace{\reduceFunc(x, y - 1)}_{\textrm{left child}} \reduce \underbrace{\reduceFunc (x + 2^{y-1}, y - 1)}_{\textrm{right child}}, & otherwise \label{eq:nodeReduceReduction}
 \end{numcases}
 
-Equation \eqref{eq:nodeReduceBaseCase} defines the base case for leaf nodes, where no further reductions are necessary.
-If $N$ is not a power of $2$, there will not always be an adjacent element, as the above example from \Cref{fig:reductionExample} has demonstrated.
-In this case, the inner node has only one child node whose value we can directly return, a fact which Equation \eqref{eq:nodeReducePassthrough} covers.
-Finally, Equation \eqref{eq:nodeReduceReduction} defines the recursive reduction strategy for inner nodes with two child nodes.
+\Cref{eq:nodeReduceBaseCase} defines the base case for leaf nodes, where no further reductions are necessary.
+If $N$ is not a power of $2$, there will not always be an adjacent element (as in \Cref{fig:reductionExample}).
+In this case, the inner node has only one child node whose value we can directly return(\Cref{eq:nodeReducePassthrough}).
+Finally, \Cref{eq:nodeReduceReduction} defines the recursive reduction strategy for inner nodes with two child nodes.
 
-We can now express the entire reduction by applying the $\reduceFunc$-function to the root node $(0, \lceil \log_2 N \rceil)$.
-To take up the example from \Cref{fig:reductionExample} again:
+We can express the entire reduction by applying the $\reduceFunc$-function to the root node $(0, \lceil \log_2 N \rceil)$.
+Consider the example in \Cref{fig:reductionExample}:
 \begin{alignat*}{2}
 \reduceFunc (0, \lceil \log_2 N \rceil) &= \reduceFunc(0, 2)  &\hspace{2em}&\rlap{\footnotesize Apply \eqref{eq:nodeReduceReduction}}\\
 &= \reduceFunc (0,1) \reduce \reduceFunc(2,1) &&\rlap{\footnotesize Apply \eqref{eq:nodeReduceReduction}} \\
@@ -98,11 +98,10 @@ To take up the example from \Cref{fig:reductionExample} again:
 &= (3 \reduce 2) \reduce 7 &&
 \end{alignat*}
 
-From the current point of view, the binary tree reduction has no obvious advantages compared to the sequential left-to-right reduction from \Cref{sec:SequentialLeftToRightReduction}.
-It requires an equal amount of reduction operations and more memory for out-of-place operations where the input data can not be overwritten, since a single accumulator does not suffice to store all intermediate results.
-The benefits become visible only if we incorporate \gls{pe}-boundaries into our model.
-Our task is to reduce $N$ elements over $p$ \glspl{pe}.
-We can split up our binary tree across multiple \glspl{pe} by distributing the elements.
+Binary Tree Reduction and the sequential left-to-right reduction from \Cref{sec:SequentialLeftToRightReduction} require an equal amount of reduction operations.
+Binary Tree Reduction requires more memory for out-of-place operations where the input data can not be overwritten, since a single accumulator does not suffice to store all intermediate results.
+We expand our model to account for \gls{pe}-boundaries.
+We split up our binary tree across multiple \glspl{pe} by distributing the elements.
 A node with coordinates $(x,y)$ belongs to the \gls{pe} which holds the element with index $x$.
 \Cref{fig:distributed_binary_tree} shows the distribution of nine elements across three \glspl{pe}.
 
@@ -144,8 +143,8 @@ A node with coordinates $(x,y)$ belongs to the \gls{pe} which holds the element 
 \label{fig:distributed_binary_tree}
 \end{figure}
 
-Reductions $(0) \reduce (1)$, $(4) \reduce (5)$ and $(6) \reduce (7)$ offer themselves for parallel execution, since there exist no data dependencies between them.
-Some calculations do require communication between the \glspl{pe}:
+Unlike sequential left-to-right reduction Binary Tree Reduction can execute the reductions $(0) \reduce (1)$, $(4) \reduce (5)$ and $(6) \reduce (7)$ in parallel, since there exist no data dependencies between them.
+Some calculations require communication between the \glspl{pe}:
 a node is \gls{pe}-intersecting if its child nodes belong to distinct \glspl{pe}.
 We define an outbound subtree root as the right child node of a \gls{pe}-intersecting node, since the algorithm must send its value over the \gls{mpi}.
 In \Cref{fig:distributed_binary_tree}, node A with coordinates $(2,1)$ and node B with coordinates $(4,2)$ are examples of \gls{pe}-intersecting nodes.
@@ -157,7 +156,7 @@ The main barrier to efficient parallelization as outlined in the previous sectio
 The target implementation utilizes the \gls{mpi} to communicate between different \glspl{pe} and since the messages are small (one double precision floating-point value occupies 8 bytes, or 64 bits), the number of messages between \glspl{pe} dominates the communication overhead.
 Under the assumption that messages are not bundled together by means of a message buffer, the message count is equal to the number of \gls{pe}-intersecting nodes.
 
-\begin{figure}
+\begin{figure}[b]
 \centering
 \begin{subfigure}{0.48\textwidth}
 \centering
@@ -172,14 +171,14 @@ Under the assumption that messages are not bundled together by means of a messag
 \caption{Remaining elements assigned to the higher ranks ($n_i^\textrm{upper}$)}
 \label{fig:messageCount256Upper}
 \end{subfigure}
-\caption{Simulated message counts for different dataset sizes on a cluster with $p=256$ \glspl{pe}}
+\caption{Simulated message counts for different dataset sizes on a cluster with $p=256$ \glspl{pe}.}
 \label{fig:messageCount256}
 \end{figure}
 
 \Cref{fig:messageCount256} shows the number of messages depending on the dataset size for the two types of distributions introduced in \Cref{eq:lowerDistribution} and \Cref{eq:upperDistribution}.
 The functions display large differences in message counts for small differences in dataset sizes, but follow a trend akin to a logarithmic function.
 For $N > p$, the lower bound of the message count is $p - 1$, since all \glspl{pe} with a rank larger than $0$ must have at least one outbound subtree root in order for its elements to be included in the final result.
-For the $n_i^\textrm{lower}$-distribution, the message count attains the global minima at $N = 2^i * p$, where $i \in \mathbb{N}$.
+For the $n_i^\textrm{lower}$-distribution (\Cref{eq:lowerDistribution}), the message count attains the global minima at $N = 2^i * p$, where $i \in \mathbb{N}$.
 In this case, each \gls{pe} holds an independent subtree of size $2^i$ whose root node is part of a \gls{pe}-intersecting node.
 If we increase our dataset size to $N+1$, applying the $n_i^\textrm{lower}$ distribution will shift all \gls{pe}-boundaries one step in $x$-direction because of the additional element on the root \gls{pe}.
 The subtree root nodes are now on different \glspl{pe} than their children, producing $i + 1$ \gls{pe}-intersecting nodes on all \glspl{pe} except the first one, as illustrated in \Cref{fig:messageCountShifting}.
@@ -204,5 +203,5 @@ M(N) = (p - 1) * (\log_2 \Big( \frac{N - 1}{p} \Big) + 1)
 \Cref{fig:messageCount256Lower} displays a plot of  \Cref{eq:upperBoundLowerDistribution} in orange color.
 Under the assumption that the number of \glspl{pe} is constant, the message count $M$ therefore is in $O(\log(N))$.
 Note that for the $n_i^\textrm{upper}$ distribution in \Cref{fig:messageCount256Upper}, the corresponding spikes are much less pronounced since the subtree shifting described above does not occur when adding only one element.
-Because of the lower upper bound, implementations should therefore prefer the $n_i^\textrm{upper}$ distribution over the $n_i^\textrm{lower}$ distribution
+Because of the lower upper bound, implementations should therefore prefer the $n_i^\textrm{upper}$ distribution over the $n_i^\textrm{lower}$ distribution.
 

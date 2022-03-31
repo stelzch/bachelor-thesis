@@ -15,7 +15,7 @@
 
 Binary Tree Reduction offers reproducible results independent of the core-count.
 It is not limited to floating-point operations and can be extended to the general set of reduction operations.
-Its message count per \gls{pe} is bounded logarithmically by the number of elements per \gls{pe} (\Cref{eq:upperBoundLowerDistribution}).
+Its message count per \gls{pe} is bounded logarithmically by the number of elements per \gls{pe} (Equation \ref{eq:upperBoundLowerDistribution}).
 If the Binary Tree Reduction takes up the majority of the runtime, optimizing the data distribution for the reduction can yield better results (\Cref{sec:DataDistribution}).
 
 For floating-point summation in particular, solutions like ReproBLAS~\cite{ahrens_algorithms_2020} outperform Binary Tree Reduction and have a negligible runtime penalty compared to naive \texttt{MPI\_Allreduce} implementations.

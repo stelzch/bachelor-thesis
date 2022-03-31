@@ -307,7 +307,7 @@ def singlethread_tree_reduction(microbenchmark_run_id):
 
 
     ax.set_ylabel("Time")
-    ax.set_xlabel("Number of elements")
+    ax.set_xlabel("Number of summands")
 
     f.tight_layout()
 
