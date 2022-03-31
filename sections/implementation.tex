@@ -605,6 +605,7 @@ $level3Sum \gets mm\_hadd\_pd(level2Sum, level2Sum)$\;
 \Return $mm\_cvtsd\_f64(level3Sum)$\;
 \end{algorithm}
 
+
 Our implementation uses \Cref{algo:AVXTreeAccumulation} as a subroutine inside \Cref{algo:SummationAlgo} to advance the iterative reduction three levels per iteration.
 If the remaining number of elements in the current iteration is not divisible by eight, the algorithm processes the remaining elements using non-vectorized instructions.
 \Cref{fig:benchmarkVectorization} compares the runtime of three accumulation algorithms: the initial recursive implementation of binary tree reduction, the vectorized AVX-2 implementation and the \texttt{std::accumulate} routine from the C++ standard library.
@@ -612,8 +613,7 @@ Since only one \gls{pe} executes this microbenchmark, no communication takes pla
 \texttt{std::accumulate} guarantees the summation order to be left-to-right and therefore can not be vectorized.
 For smaller workloads ($N < 64$), the overhead introduced by the vectorization is larger than the performance gains, but for larger workloads the AVX-2 implementation outperforms \texttt{std::accumulate} by a factor of more than $2$.
 For small inputs, it can therefore be beneficial to switch to \texttt{std::accumulate}.
-
-\begin{figure}
+\begin{figure}[h!]
 \centering
 \includegraphics[scale=0.72]{figures/benchmarkVectorization}
 \caption{Microbenchmark comparing sequential summation to AVX-2 binary tree reduction for $p=1$.}

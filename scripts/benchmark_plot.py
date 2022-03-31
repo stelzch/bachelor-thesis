@@ -78,7 +78,7 @@ def scatter_plot(run_id):
             "include": True
         }
     }
-    f = plt.figure(figsize=(4.5,5.0))
+    f = plt.figure(figsize=(4.0,5.0))
     ax = f.subplots(1)
     ax.set_ylabel('Accumulate Time')
     ax.set_xlabel('number of summands')
@@ -176,7 +176,7 @@ def violin_plot(run_id, datasetQuery):
     plt.subplots_adjust(left=0.15, bottom=0.0 + margin_y, right=0.98, top=1.0 - margin_y)
     return f
 
-def slowdown_plot(run_id, faster_mode='reproblas', slower_mode='tree'):
+def slowdown_plot(run_id, faster_mode='reproblas', slower_mode='tree', color='cyan'):
     plot_data = fetch_durations(run_id)
     formatter0 = EngFormatter(places=2)
 
@@ -197,13 +197,13 @@ def slowdown_plot(run_id, faster_mode='reproblas', slower_mode='tree'):
         X.append(n)
         slowdowns.append(slowdown)
 
-    f, ax = plt.subplots(1)
+    f, ax = plt.subplots(1, figsize=(5.0,4.8))
 
     ax.set_xscale('log', base=2)
     ax.set_ylabel("Slowdown")
     ax.set_xlabel("Number of summands")
 
-    ax.scatter(X, slowdowns)
+    ax.scatter(X, slowdowns, c=([color] * len(X)))
     ax.axhline(y=1.0, linestyle="--", color="gray")
 
     return f
@@ -358,9 +358,9 @@ if __name__ == '__main__':
 
     for dataset in ["354", "rokasA4", "rokasA8", "PeteD8", "rokasD1", "rokasD4", "rokasD7", "fusob", "multi100", "prim"]:
         violin_plot(last_complete, f"%{dataset}%").savefig(f"figures/violin{dataset.capitalize()}.pdf")
-    slowdown_plot(last_complete).savefig("figures/slowdownPlot.pdf")
-    slowdown_plot(last_complete, faster_mode='allreduce', slower_mode='reproblas').savefig("figures/slowdownAllreduceReproblas.pdf")
-    slowdown_plot(last_complete, faster_mode='allreduce', slower_mode='tree').savefig("figures/slowdownAllreduceTree.pdf")
+    slowdown_plot(last_complete, color='red').savefig("figures/slowdownPlot.pdf")
+    slowdown_plot(last_complete, faster_mode='allreduce', slower_mode='reproblas', color='blue').savefig("figures/slowdownAllreduceReproblas.pdf")
+    slowdown_plot(last_complete, faster_mode='allreduce', slower_mode='tree', color='blue').savefig("figures/slowdownAllreduceTree.pdf")
     distribution_histogram(96, last_complete).savefig("figures/distribution_experiment.pdf")
     singlethread_tree_reduction(5).savefig("figures/benchmarkVectorization.pdf")
 

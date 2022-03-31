@@ -13,7 +13,8 @@
 \chapter{Acknowledgements}
 This work was performed on the computational resource bwUniCluster funded by the Ministry of Science, Research and the Arts Baden-Württemberg and the Universities of the State of Baden-Württemberg, Germany, within the framework program bwHPC.
 This project has received funding from the European Research Council (ERC) under the European Union’s Horizon 2020 research and innovation program (grant agreement No. 882500).
-
+\\
+\vspace{4cm}
 \includegraphics[scale=0.1]{logos/erc.png}
 
 %\chapter{Glossary}
@@ -27,7 +28,7 @@ This project has received funding from the European Research Council (ERC) under
 
 \section{Buffer Subtree-Flushing Criterion Comparison}
 
-\begin{figure}[H]
+\begin{figure}[h!]
 \centering
 \includegraphics[scale=0.8]{figures/bufferSizes.pdf}
 \caption{Accumulation runtime with different subtree sizes used as flushing criterion.}
@@ -35,28 +36,71 @@ This project has received funding from the European Research Council (ERC) under
 \end{figure}
 
 \section{Detailed Benchmark Results}
+\,
+\newcommand{\mScale}{0.72}
 
-\newcommand{\mScale}{0.7}
-\begin{figure}[H]\centering
+\begin{figure}
+\begin{subfigure}{\textwidth}
+\centering
 \includegraphics[scale=\mScale]{figures/violin354.pdf}
+\end{subfigure}
+
+\begin{subfigure}{\textwidth}
+\centering
 \includegraphics[scale=\mScale]{figures/violinMulti100.pdf}
+\end{subfigure}
 
-\end{figure}
-\begin{figure}\centering\ContinuedFloat
+\begin{subfigure}{\textwidth}
+\centering
 \includegraphics[scale=\mScale]{figures/violinPrim.pdf}
+\end{subfigure}
+
+
+\end{figure}
+\begin{figure}\centering\ContinuedFloat
+
+\begin{subfigure}{\textwidth}
+\centering
 \includegraphics[scale=\mScale]{figures/violinFusob.pdf}
-\includegraphics[scale=\mScale]{figures/violinRokasD1.pdf}
+\end{subfigure}
 
-\end{figure}
-\begin{figure}\centering\ContinuedFloat
-\includegraphics[scale=\mScale]{figures/violinRokasA4.pdf}
-\includegraphics[scale=\mScale]{figures/violinRokasD7.pdf}
+\begin{subfigure}{\textwidth}
+\centering
 \includegraphics[scale=\mScale]{figures/violinRokasD4.pdf}
+\end{subfigure}
+
+\begin{subfigure}{\textwidth}
+\centering
+\includegraphics[scale=\mScale]{figures/violinRokasA8.pdf}
+\end{subfigure}
 
 \end{figure}
 \begin{figure}\centering\ContinuedFloat
+
+\begin{subfigure}{\textwidth}
+\centering
+\includegraphics[scale=\mScale]{figures/violinRokasD1.pdf}
+\end{subfigure}
+
+
+\begin{subfigure}{\textwidth}
+\centering
+\includegraphics[scale=\mScale]{figures/violinRokasA4.pdf}
+\end{subfigure}
+
+\begin{subfigure}{\textwidth}
+\centering
 \includegraphics[scale=\mScale]{figures/violinPeteD8.pdf}
-\includegraphics[scale=\mScale]{figures/violinRokasA8.pdf}
+\end{subfigure}
+
+\end{figure}
+\begin{figure}\centering\ContinuedFloat
+
+
+\begin{subfigure}{\textwidth}
+\centering
+\includegraphics[scale=\mScale]{figures/violinRokasD7.pdf}
+\end{subfigure}
 
 \caption{Runtime distribution for all datasets with $p=256$ \glspl{pe}.}
 
@@ -76,7 +120,7 @@ This project has received funding from the European Research Council (ERC) under
 \label{fig:slowdownAllreduceTree}
 \end{figure}
 
-
+\newpage
 \section{Message Count Maxima}
 
 \begin{figure}[H]
