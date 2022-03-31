@@ -15,5 +15,6 @@ Because of rounding errors, parallel floating-point summation can produce differ
 For some algorithms like hill climbing, RAxML-NG~\cite{kozlov_raxml-ng_2019} or greedy algorithms, this implies that results may be irreproducible with different core-counts.
 We present the Binary Tree Reduction algorithm, which follows a distributed binary tree scheme that keeps the calculation order fixed and independent of the core-count $p$.
 A naive implementation requires up to $(p - 1) * (\log_2 \big(\frac{N-1}{p} \big) + 1)$ messages to sum $N$ floating-point numbers.
-To reduce the message count, we introduce a message buffer and optimize data distribution across the cores.
+To reduce the message count, we introduce a message buffer and optimize data distribution across the cores, the latter results in a runtime decrease of $18\,\%$.
 We find that for $p=256$, Binary Tree Reduction has a slowdown of less than $2$ compared to a naive, irreproducible solution.
+It is able to sum $N=21 * 10^6$ summands on $p=256$ cores in about \SI{248}{\micro\second}.
