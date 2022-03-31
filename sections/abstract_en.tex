@@ -17,4 +17,4 @@ We present the Binary Tree Reduction algorithm, which follows a distributed bina
 A naive implementation requires up to $(p - 1) * (\log_2 \big(\frac{N-1}{p} \big) + 1)$ messages to sum $N$ floating-point numbers.
 To reduce the message count, we introduce a message buffer and optimize data distribution across the cores, the latter results in a runtime decrease of $18\,\%$.
 We find that for $p=256$, Binary Tree Reduction has a slowdown of less than $2$ compared to a naive, irreproducible solution.
-It is able to sum $N=21 * 10^6$ summands on $p=256$ cores in about \SI{248}{\micro\second}.
+It is able to compute the sum of $N=21 * 10^6$ summands on $p=256$ cores in about \SI{248}{\micro\second}.
