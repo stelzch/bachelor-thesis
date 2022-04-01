@@ -56,13 +56,13 @@ The global index of the first element assigned to a \gls{pe} is the so-called st
 
 \begin{align}
 \startIndex (0) &= 0 \\
-\startIndex (i) &= \sum_{j = 0}^{i - 1} n_i
+\startIndex (i) &= \sum_{j = 0}^{i - 1} n_j
 \label{eq:startIndex}
 \end{align}
 
 This allows us to define the function $\rankFromIndex$, which computes the rank of the \gls{pe} that stores the given element:
 \begin{equation}
-\rankFromIndex (x) = \max \{i \in [0, p - 1] \;|\; \startIndex (i) \leq x \}
+\rankFromIndex (x) = \max\ \{i \in [0, p - 1] \;|\; \startIndex (i) \leq x \}
 \end{equation}
 
 For any given set $X$ of $x$-coordinates, we can use the $\rankFromIndex$-function to determine the $x$-coordinates of outbound subtree roots, i.e.\ nodes whose parent node lies on a different \gls{pe}:
@@ -339,7 +339,7 @@ If the user can arbitrarily assign elements to \glspl{pe}, multiple optimization
 \end{equation}
 
 $t_{\textrm{MPI\_Send}}$ is an estimate of the time needed to send a single element between two \glspl{pe}, $t_\textrm{add}$ estimates the time needed to add two floating-point values with double precision (64 bit).
-On the shared-memory machine \textit{i10pc138}, these estimates were empirically measured to be $t_{\textrm{MPI\_Send}} \approx 281ns$ and $t_\textrm{add} \approx 4.15ns$.
+On a shared-memory machine,\footnote{Refer to \Cref{ch:Experiments} for hardware specifications.} these estimates were empirically measured to be $t_{\textrm{MPI\_Send}} \approx 281ns$ and $t_\textrm{add} \approx 4.15ns$.
 While this model does not take any data dependencies between \glspl{pe} into account, it balances the performance gain achieved by parallelization (represented by a low maximum on the right side of \Cref{eq:distributionScore}) against the communication overhead caused by binary tree fragmentation. 
 
 In this section we evaluate multiple approaches to the optimization of the data distribution with an example dataset with $N = 504\,850$ summands and $p = 256$ \glspl{pe}.
@@ -419,7 +419,7 @@ $n_i^\textrm{power2}$ & \SI{1083.4}{\micro\second} & 256
 \end{table}
 
 The rounding decreases the amount of messages considerably (\Cref{table:Power2DistributionScore}).
-With our test dataset, the message count is in the vicinity of the lower bound of $p - 1$, a $80\%$ reduction compared to the even distribution.
+With our test dataset, the message count is in the vicinity of the lower bound of $p - 1$, an $80\%$ reduction compared to the even distribution.
 This comes at the cost of an imbalanced element distribution, the \gls{pe} with the highest rank, which stores the remaining elements, contains about half the elements.
 The score function penalizes the inefficient parallelization with the second term, causing the score to be $2.7\times$ higher compared to the even distribution.
 
@@ -470,7 +470,7 @@ $n_i^\textrm{optimized}$ & \SI{184.5}{\micro\second} & 621
 
 \Cref{fig:distributionBoxplot} shows the difference in assigned elements of the even distribution and the optimized distribution with a maximum deviation of $\alpha = 0.2$.
 The even distribution always assigns an equal number of elements to \glspl{pe}, while the optimized distribution varies the number of elements according to the maximum deviation parameter $\alpha$.
-Notice that the optimized distribution has no outliers, unlike the $n_i^\textrm{power2}$ distribution.
+%Notice that the optimized distribution has no outliers, unlike the $n_i^\textrm{power2}$ distribution.
 \Cref{fig:distribution_runtimes} shows a histogram of the summation duration for the two distributions.
 The runtime benefit of an optimized data distribution is visible, with optimized distribution the algorithm calculates results about $\SI{4}{\micro\second}$ faster than with  an even distribution.
 
@@ -516,9 +516,10 @@ The runtime of this algorithm is $O(p)$.
 Microbenchmarks revealed the linearly increasing runtime and the need for optimization (see \Cref{fig:microbenchmarkRankFromIndex}).
 The currently implemented version uses a red-black tree (\texttt{std::map}) to scan for the start index, which yields a runtime in $O(\log(p))$.
 
-For $p=256$ \glspl{pe}, a single call to $\rankFromIndex$ takes about \SI{620}{\micro\second}.
-With $N = 1\,327\,505$ elements, \Cref{algo:SummationAlgo} calls $\rankFromIndex$ $1913$ times, about $7$ times per \gls{pe}.
-Thus, the $\rankFromIndex$ calculation takes up about \SI{4.3}{\micro\second} of the total accumulation time of \SI{30.5}{\micro\second}, suggesting that further optimization could offer a $15\%$ performance gain.
+%For $p=256$ \glspl{pe}, a single call to $\rankFromIndex$ takes about \SI{620}{\micro\second}.
+%With $N = 1\,327\,505$ elements, \Cref{algo:SummationAlgo} calls $\rankFromIndex$ $1913$ times, about $7$ times per \gls{pe}.
+%Thus, the $\rankFromIndex$ calculation takes up about \SI{4.3}{\micro\second} of the total accumulation time of \SI{30.5}{\micro\second}, suggesting that further optimization could offer a $15\%$ performance gain.
+\newpage
 \subsection{Vectorization}
 \label{sec:Vectorization}
 
@@ -569,14 +570,13 @@ block/.style={draw,minimum width=1.6cm, text centered,minimum height=0.8cm,font=
 \node[block,right=0cm of abcdefgh](abcdefgh2){$((A+B)+(C+D))+((E+F)+(G+H))$};
 \path[->,very thick] (0,-7.4) edge (0,-8.6);
 \node[right=0.4cm of {0,-8}](op5) {$\_mm\_hadd\_pd$};
-
 \end{tikzpicture}
 \caption{Register content during AVX-2 subtree summation.}
 \label{fig:avxSchema}
 \end{figure}
 
 The theoretical per-node peak of \gls{flops} increases dramatically under the utilization of \gls{simd} capabilities~\cite{dolbeau_theoretical_2018}.
-While modern compilers like the GNU C-Compiler try to automatically vectorize existing code\footnote{We confirmed manually that the relevant code sections compile to AVX machine instructions after passing the \texttt{-mavx} flag}, optimization by hand can yield better results.
+While modern compilers like the GNU C-Compiler try to automatically vectorize existing code,\footnote{We confirmed manually that the relevant code sections compile to AVX machine instructions after passing the \texttt{-mavx} flag} optimization by hand can yield better results.
 
 Compared to the simple left-to-right reduction presented in \Cref{sec:SequentialLeftToRightReduction}, a reduction tree lends itself better to parallelization, since an algorithm can reduce subtrees independently.
 Our implementation uses x86 \gls{avx}, specifically AVX-2.
@@ -608,11 +608,11 @@ $level3Sum \gets mm\_hadd\_pd(level2Sum, level2Sum)$\;
 
 Our implementation uses \Cref{algo:AVXTreeAccumulation} as a subroutine inside \Cref{algo:SummationAlgo} to advance the iterative reduction three levels per iteration.
 If the remaining number of elements in the current iteration is not divisible by eight, the algorithm processes the remaining elements using non-vectorized instructions.
-\Cref{fig:benchmarkVectorization} compares the runtime of three accumulation algorithms: the initial recursive implementation of binary tree reduction, the vectorized AVX-2 implementation and the \texttt{std::accumulate} routine from the C++ standard library.
+\Cref{fig:benchmarkVectorization} compares the runtime of three accumulation algorithms: the initial recursive implementation of Binary Tree Reduction, the vectorized AVX-2 implementation and the \texttt{std::accumulate} routine from the C++ standard library.
 Since only one \gls{pe} executes this microbenchmark, no communication takes place and all runtime costs are purely computational.
 \texttt{std::accumulate} guarantees the summation order to be left-to-right and therefore can not be vectorized.
-For smaller workloads ($N < 64$), the overhead introduced by the vectorization is larger than the performance gains, but for larger workloads the AVX-2 implementation outperforms \texttt{std::accumulate} by a factor of more than $2$.
-For small inputs, it can therefore be beneficial to switch to \texttt{std::accumulate}.
+For smaller workloads ($N < 64$), the overhead introduced by vectorization is larger than the performance gains, but for larger workloads the AVX-2 implementation outperforms \texttt{std::accumulate} by a factor of more than $2$.
+For small inputs, it can be beneficial to switch to \texttt{std::accumulate}.
 \begin{figure}[h!]
 \centering
 \includegraphics[scale=0.72]{figures/benchmarkVectorization}

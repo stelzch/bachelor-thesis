@@ -13,8 +13,8 @@
 \Abstract
 Die Addition von Gleitkommazahlen kann aufgrund von Rundungsfehlern bei unterschiedlicher Prozessorenanzahl zu unterschiedlichen Ergebnissen führen.
 Für manche Algorithmen wie RAxML-NG~\cite{kozlov_raxml-ng_2019} oder Greedy-Algorithmen kann dies den Verlust der Reproduzierbarkeit bei unterschiedlicher Prozessorenanzahl bedeuten.
-Wir stellen einen Reduktionsalgorithmus vor der nach dem Schema eines verteilten Binärbaums vorgeht, wodurch die Ausführungsreihenfolge unabhängig von der Prozessorenanzahl $p$ bleibt.
-Eine naive Implementierung muss bis zu $(p - 1) * (\log_2 (\tfrac{N-1}{p}) + 1)$ Nachrichten senden um $N$ Gleitkommazahlen zu addieren.
+Wir stellen einen Reduktionsalgorithmus vor, der nach dem Schema eines verteilten Binärbaums vorgeht, wodurch die Ausführungsreihenfolge unabhängig von der Prozessorenanzahl $p$ bleibt.
+Eine naive Implementierung muss bis zu $(p - 1) * (\log_2 (\tfrac{N-1}{p}) + 1)$ Nachrichten senden, um $N$ Gleitkommazahlen zu addieren.
 Um die Nachrichtenanzahl zu senken führen wir einen Nachrichtenpuffer ein und optimieren die Datenverteilung über die Prozessoren, wobei letzteres zur einer Verringerung der Laufzeit um $18\,\%$ führt.
-Wir stellen fest, dass für $p=256$ Prozessoren der Binärbaum-Reduktionsalgorithmus weniger als $2$-mal langsamer ist als ein naiver, unreproduzierbarer Algorithmus.
-Er ist imstande $N=21*10^6$ Summanden auf $p=256$ in \SI{248}{\micro\second} aufzusummieren.
+Wir stellen fest, dass für $p=256$ Prozessoren die Laufzeit des Binärbaum-Reduktionsalgorithmus weniger als $200\,\%$ der eines naiven, unreproduzierbaren Algorithmus entspricht.
+Binärbaum-Reduktion ist imstande $N=21*10^6$ Summanden auf $p=256$ Prozessoren in \SI{248}{\micro\second} aufzusummieren.

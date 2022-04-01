@@ -30,7 +30,7 @@ n_i^{\textrm{upper}} &= \begin{cases}
 Because of the abundance of reduction operations in modern high-performance-computing applications, there already exist multiple reproducible reduction algorithms.
 
 
-\subsection{Sequential left-to-right reduction}
+\subsection{Sequential Left-to-right Reduction}
 \label{sec:SequentialLeftToRightReduction}
 
 A naive approach to solving above problem is to gather all elements on a single PE and then apply the reduction operation strictly from left to right:
@@ -40,6 +40,7 @@ x_0 \circ x_1 \circ x_2 \circ \ldots  \circ x_{N-1} = ((x_0 \circ x_1) \circ x_2
 \end{equation}
 
 While simple in implementation, this approach does not benefit from parallelization.
+It requires $O(T_\textrm{Gather} + N)$ time.
 Because of the communication overhead, performance decreases with an increasing number of \glspl{pe}.
 
 
@@ -59,7 +60,7 @@ This approach is not suitable for general reduction operations, since it depends
 \begin{figure}[H]
 \centering
 \includegraphics[scale=0.7]{figures/villa_et_al_reduction_tree.pdf}
-\caption{General reduction tree (figure from Villa et al.\ \cite{villa_effects_2009}).}
+\caption[General reduction tree]{General reduction tree (figure from Villa et al.\ \cite{villa_effects_2009}).}
 \label{fig:villa_reduction_tree}
 \end{figure}
 
@@ -68,4 +69,4 @@ Villa et al.~\cite{villa_effects_2009} utilize a $K$-ary tree structure on a Cra
 Using parallel-prefix accumulation, they compute the sum of $N$ summands in $\log_K (N)$ steps, where $K$ determines the amount of numbers the algorithm accumulates sequentially in each step.
 The reproducibility stems from the fact that the reduction tree depends only on the total number of summands $N$ and the constant $K$, therefore the algorithm uses the same calculation order if the core-count differs.
 
-The original source code is not available even after contacting the authors, therefore the implementation details are unknown and runtime comparisons impossible.
+The original source code is not available even after contacting the authors, therefore implementation details are unknown and runtime comparisons hardly possible.

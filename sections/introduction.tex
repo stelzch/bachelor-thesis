@@ -9,7 +9,7 @@ even if the only variable element is the number of participating \glsfirstplural
 Irreproducibility of reduction operations propagates upwards into the results of high-level scientific software packages, impeding researchers abilities to understand and exchange these results.
 
 RAxML-NG~\cite{kozlov_raxml-ng_2019} for example is a software package that searches for the most likely phylogenetic trees based on biological input sequences.
-Given the exponentially large number of possible trees (for $100$ taxa there exist over $10^{182}$ distinct phylogenies~\cite{stamatakis_efficient_2020}) and proven $\mathcal{NP}$-hardness of the problem~\cite{roch_short_2006}, a exhaustive tree search is infeasible.
+Given the exponentially large number of possible trees (for $100$ taxa there exist over $10^{182}$ distinct phylogenies~\cite{stamatakis_efficient_2020}) and proven $\mathcal{NP}$-hardness of the problem~\cite{roch_short_2006}, an exhaustive tree search is infeasible.
 Instead, RAxML-NG uses stochastic evolutionary models to determine the likelihood of a given tree and performs a tree search to find a maximum likelihood estimate.
 Because of their small magnitude, programs usually deal with likelihood values logarithmically.
 To increase execution speed, RAxML-NG assumes that different sites evolve independently and computes per-site likelihoods in parallel on different threads.
