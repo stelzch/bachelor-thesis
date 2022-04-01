@@ -9,6 +9,7 @@ figures:
 	python3 scripts/scaling_plot.py
 
 thesis.pdf: *.tex sections/*.tex figures
+	latexmk -pdflua thesis.tex
 	makeglossaries thesis
 	latexmk -pdflua thesis.tex
 
